@@ -1,11 +1,10 @@
+import inspect
+import os
 from typing import Iterable, Tuple
 
 import torch
-import os
 import torchtext
-import inspect
 from lightning.pytorch import LightningDataModule
-
 from torch.utils.data import DataLoader, IterableDataset
 from transformers import PreTrainedTokenizer
 
