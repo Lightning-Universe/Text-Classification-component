@@ -1,6 +1,4 @@
 data/*
 .git
 *.egg-info
-.shared
-.cache
 lightning_logs
