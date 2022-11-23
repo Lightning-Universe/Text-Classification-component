@@ -37,7 +37,7 @@ class TLDR(L.LightningWork, ABC):
             monitor="val_loss",
             mode="min",
         )
-        return dict(max_epochs=100, callbacks=[early_stopping, checkpoints], strategy="ddp_find_unused_parameters_false")
+        return dict(max_epochs=1, callbacks=[early_stopping, checkpoints], strategy="deepspeed_stage_3")
 
     def run(self):
         # for huggingface/transformers

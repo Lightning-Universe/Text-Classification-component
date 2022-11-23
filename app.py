@@ -21,7 +21,7 @@ class GiveMeAName(TLDR):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-560m"
+        model_type = "bigscience/bloom-1b1"
 
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
@@ -49,6 +49,6 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         GiveMeAName,
         num_nodes=1,  # Fixme
-        cloud_compute=L.CloudCompute("gpu", disk_size=50),
+        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )

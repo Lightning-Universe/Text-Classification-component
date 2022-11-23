@@ -41,7 +41,7 @@ class TextClassificationDataModule(LightningDataModule):
         self,
         dataset_name: str,
         tokenizer: PreTrainedTokenizer,
-        batch_size: int = 8,
+        batch_size: int = 4,
         max_token_len: int = 256,
         num_workers: int = min(os.cpu_count() - 1, 1),
     ):
