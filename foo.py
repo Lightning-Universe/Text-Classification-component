@@ -1,3 +1,5 @@
+from lightning import Trainer
+
 from lai_textclf.data import TextClassificationDataModule
 from transformers import GPT2Tokenizer, GPT2ForSequenceClassification
 from lai_textclf.lightning_module import TextClassification
@@ -14,12 +16,15 @@ lm_model = TextClassification(model, tokenizer)
 
 
 if __name__ == '__main__':
-    dm.prepare_data()
-    dm.setup()
+    # dm.prepare_data()
+    # dm.setup()
+    #
+    # dm.train_dataloader()
+    # for i, batch in enumerate(dm.train_dataloader()):
+    #     train_loss = lm_model.training_step(batch, i)
+    #     val_loss = lm_model.validation_step(batch, i)
 
-    dm.train_dataloader()
-    for i, batch in enumerate(dm.train_dataloader()):
-        train_loss = lm_model.training_step(batch, i)
-        val_loss = lm_model.validation_step(batch, i)
+    trainer = Trainer(max_steps=5)
+    trainer.fit(lm_model, datamodule=dm)
 
 
