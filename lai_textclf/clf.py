@@ -8,12 +8,12 @@ from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification
 
 
-class TLDR(L.LightningWork, ABC):
+class TextClf(L.LightningWork, ABC):
     """Finetune on a text summarization task."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.drive = L.app.storage.Drive("lit://artifacts")
+        self.drive = L.app.storage.Drive("lit://artifacts")
 
     @abstractmethod
     def get_model(self) -> Tuple[nn.Module, Any]:
@@ -59,7 +59,7 @@ class TLDR(L.LightningWork, ABC):
 
         trainer.fit(pl_module, datamodule)
 
-        # print("Uploading checkpoints and logs...")
-        # for root, dirs, files in os.walk("lightning_logs", topdown=False):
-        #     for name in files:
-        #         self.drive.put(os.path.join(root, name))
+        print("Uploading checkpoints and logs...")
+        for root, dirs, files in os.walk("lightning_logs", topdown=False):
+            for name in files:
+                self.drive.put(os.path.join(root, name))

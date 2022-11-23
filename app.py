@@ -3,13 +3,13 @@ import lightning as L
 import torch.cuda
 from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
-from lai_textclf.clf import TLDR
+from lai_textclf.clf import TextClf
 from lai_textclf.lightning_module import predict
 
 sample_text = "Blue is the most beautiful color!"
 
 
-class GiveMeAName(TLDR):
+class GiveMeAName(TextClf):
 
     def get_model(self):
         # choices:
@@ -18,7 +18,7 @@ class GiveMeAName(TLDR):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-1b7"
+        model_type = "bigscience/bloom-3b"
 
         print(torch.cuda.get_device_name())
 
@@ -39,7 +39,7 @@ class GiveMeAName(TLDR):
 
         from lightning.pytorch.strategies import DeepSpeedStrategy
 
-        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True)
+        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True)
         settings['precision'] = 'bf16'
 
         return settings
@@ -55,7 +55,7 @@ class GiveMeAName(TLDR):
 app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         GiveMeAName,
-        num_nodes=1,  # Fixme
+        num_nodes=2,
         cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )
