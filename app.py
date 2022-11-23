@@ -3,8 +3,7 @@ import lightning as L
 import torch.cuda
 from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
-from lai_textclf.clf import TextClf
-from lai_textclf.lightning_module import predict
+from lai_textclf import TextClf, predict
 
 sample_text = "Blue is the most beautiful color!"
 
