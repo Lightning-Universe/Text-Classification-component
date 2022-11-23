@@ -1,6 +1,4 @@
-"""
- !pip install 'git+https://github.com/Lightning-AI/LAI-TLDR'
-"""  # fixme
+
 import lightning as L
 from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
