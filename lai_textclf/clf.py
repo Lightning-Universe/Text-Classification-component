@@ -37,7 +37,11 @@ class TLDR(L.LightningWork, ABC):
             monitor="val_loss",
             mode="min",
         )
-        return dict(max_epochs=1, callbacks=[early_stopping, checkpoints], strategy="deepspeed_stage_3")
+        return dict(
+            max_epochs=1,
+            callbacks=[early_stopping, checkpoints],
+            strategy="deepspeed_stage_3",
+        )
 
     def run(self):
         # for huggingface/transformers
@@ -45,7 +49,9 @@ class TLDR(L.LightningWork, ABC):
 
         module, tokenizer = self.get_model()
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationDataModule(dataset_name=self.get_data_source(), tokenizer=tokenizer)
+        datamodule = TextClassificationDataModule(
+            dataset_name=self.get_data_source(), tokenizer=tokenizer
+        )
         trainer = L.Trainer(**self.get_trainer_settings())
 
         self._pl_module = pl_module

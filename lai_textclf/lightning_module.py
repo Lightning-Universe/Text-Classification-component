@@ -49,24 +49,24 @@ class TextClassification(LightningModule):
     def training_step(self, batch, batch_idx):
         """training step"""
 
-        loss, outputs = self(
-            **batch
-        )
+        loss, outputs = self(**batch)
 
         self.log(
             "train_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
         )
 
-        self.log("max-gpu-mem-gb", torch.cuda.max_memory_allocated() // (1024 ** 3), prog_bar=True, logger=False)
+        self.log(
+            "max-gpu-mem-gb",
+            torch.cuda.max_memory_allocated() // (1024**3),
+            prog_bar=True,
+            logger=False,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx):
         """validation step"""
 
-
-        loss, outputs = self(
-            **batch
-        )
+        loss, outputs = self(**batch)
 
         self.log(
             "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
@@ -76,9 +76,7 @@ class TextClassification(LightningModule):
     def test_step(self, batch, batch_idx):
         """test step"""
 
-        loss, outputs = self(
-            **batch
-        )
+        loss, outputs = self(**batch)
 
         self.log("test_loss", loss, prog_bar=True, logger=True)
         return loss

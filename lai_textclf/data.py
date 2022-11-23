@@ -1,20 +1,20 @@
 from typing import Iterable, Tuple
 
-import numpy as np
 import torch
 import os
 import torchtext
 import inspect
-from lightning.pytorch import LightningDataModule, LightningModule
+from lightning.pytorch import LightningDataModule
 
-from torch.optim import AdamW
 from torch.utils.data import DataLoader, IterableDataset
 from transformers import PreTrainedTokenizer
+
 
 class IterableTextClfDataset(IterableDataset):
     def __init__(self, dataset: Iterable[Tuple[int, str]]):
         self.dataset = dataset
         self.dataset_iter = None
+
     def __iter__(self):
         self.dataset_iter = iter(self.dataset)
         return self
@@ -29,9 +29,10 @@ class IterableTextClfDataset(IterableDataset):
 
         return dict(
             text=text,
-            label=int(label -1) if isinstance(label, (int, float)) else None, # labels need to start at 0
+            label=int(label - 1)
+            if isinstance(label, (int, float))
+            else None,  # labels need to start at 0
         )
-
 
 
 class TextClassificationDataModule(LightningDataModule):
@@ -48,7 +49,7 @@ class TextClassificationDataModule(LightningDataModule):
         """
         initiates a PyTorch Lightning Data Module
         Args:
-            data_set: the torchtext dataset name to use
+            dataset_name: the torchtext dataset name to use
             tokenizer (PreTrainedTokenizer): PreTrainedTokenizer (T5Tokenizer, MT5Tokenizer, or ByT5Tokenizer)
             batch_size (int, optional): batch size. Defaults to 4.
             max_token_len (int, optional): max token length of source text. Defaults to 512.
@@ -70,13 +71,13 @@ class TextClassificationDataModule(LightningDataModule):
     def setup_data(self, download: bool = False):
         self.dset_cls = getattr(torchtext.datasets, self.dataset_name)
 
-        choices_split = inspect.signature(self.dset_cls).parameters['split'].default
+        choices_split = inspect.signature(self.dset_cls).parameters["split"].default
 
         self.train_split = choices_split[0]
         self.val_split = choices_split[1]
         self.test_split = choices_split[-1]
 
-        data_root_dir = f'~/.cache/torchtext/{self.dataset_name}'
+        data_root_dir = f"~/.cache/torchtext/{self.dataset_name}"
         train_dset = self.dset_cls(root=data_root_dir, split=self.train_split)
         val_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
         test_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
@@ -106,7 +107,7 @@ class TextClassificationDataModule(LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len)
+            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len),
         )
 
     def test_dataloader(self):
@@ -116,7 +117,7 @@ class TextClassificationDataModule(LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len)
+            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len),
         )
 
     def val_dataloader(self):
@@ -126,12 +127,11 @@ class TextClassificationDataModule(LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len)
+            collate_fn=TextEncodingCollate(self.tokenizer, self.max_token_len),
         )
 
 
 class TextEncodingCollate:
-
     def __init__(self, tokenizer, max_sequence_length=256):
         self.tokenizer = tokenizer
         self.max_sequence_length = max_sequence_length
