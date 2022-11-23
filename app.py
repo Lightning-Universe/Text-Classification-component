@@ -17,7 +17,7 @@ class GiveMeAName(TextClf):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-3b"
+        model_type = "bigscience/bloom-1b1"
 
         print(torch.cuda.get_device_name())
 
@@ -56,7 +56,7 @@ class GiveMeAName(TextClf):
 app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         GiveMeAName,
-        num_nodes=2,
+        num_nodes=1,
         cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )
