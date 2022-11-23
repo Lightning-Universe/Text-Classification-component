@@ -2,3 +2,6 @@ data/*
 .git
 *.egg-info
 lightning_logs
+.cache
+.shared
+lightning_logs
