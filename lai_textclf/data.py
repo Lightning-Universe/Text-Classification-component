@@ -32,18 +32,12 @@ class IterableTokenizingDataset(IterableDataset):
 
         text_encoding = self.tokenizer(
             text,
-            max_length=self.max_token_len,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            add_special_tokens=True,
             return_tensors="pt",
         )
 
         return dict(
-            text_input_ids=text_encoding["input_ids"].flatten(),
-            text_attention_mask=text_encoding["attention_mask"].flatten(),
-            labels=int(label -1), # labels need to start at 0
+            **text_encoding,
+            labels=int(label -1) if isinstance(label, (int, float)) else None, # labels need to start at 0
         )
 
 

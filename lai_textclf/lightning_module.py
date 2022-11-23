@@ -23,99 +23,72 @@
 Code in this file is based on https://github.com/Shivanandroy/simpleT5 by Shivanand Roy
 """
 
+import torch
+from lightning.pytorch import LightningModule
+from torch.optim import AdamW
 
-#
-# class TextSummarization(LightningModule):
-#     """PyTorch Lightning Model class"""
-#
-#     def __init__(
-#         self,
-#         model,
-#         tokenizer,
-#     ):
-#         super().__init__()
-#         self.model = model
-#         self.tokenizer = tokenizer
-#         self.average_training_loss = None
-#         self.average_validation_loss = None
-#         self.save_only_last_epoch = False
-#
-#     def forward(self, input_ids, attention_mask, decoder_attention_mask, labels=None):
-#         """forward step"""
-#         output = self.model(
-#             input_ids,
-#             attention_mask=attention_mask,
-#             labels=labels,
-#             decoder_attention_mask=decoder_attention_mask,
-#         )
-#
-#         return output.loss, output.logits
-#
-#     def training_step(self, batch, batch_size):
-#         """training step"""
-#         input_ids = batch["source_text_input_ids"]
-#         attention_mask = batch["source_text_attention_mask"]
-#         labels = batch["labels"]
-#         labels_attention_mask = batch["labels_attention_mask"]
-#
-#         loss, outputs = self(
-#             input_ids=input_ids,
-#             attention_mask=attention_mask,
-#             decoder_attention_mask=labels_attention_mask,
-#             labels=labels,
-#         )
-#
-#         self.log(
-#             "train_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
-#         )
-#         return loss
-#
-#     def validation_step(self, batch, batch_size):
-#         """validation step"""
-#         input_ids = batch["source_text_input_ids"]
-#         attention_mask = batch["source_text_attention_mask"]
-#         labels = batch["labels"]
-#         labels_attention_mask = batch["labels_attention_mask"]
-#
-#         loss, outputs = self(
-#             input_ids=input_ids,
-#             attention_mask=attention_mask,
-#             decoder_attention_mask=labels_attention_mask,
-#             labels=labels,
-#         )
-#
-#         self.log(
-#             "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
-#         )
-#         return loss
-#
-#     def test_step(self, batch, batch_size):
-#         """test step"""
-#         input_ids = batch["source_text_input_ids"]
-#         attention_mask = batch["source_text_attention_mask"]
-#         labels = batch["labels"]
-#         labels_attention_mask = batch["labels_attention_mask"]
-#
-#         loss, outputs = self(
-#             input_ids=input_ids,
-#             attention_mask=attention_mask,
-#             decoder_attention_mask=labels_attention_mask,
-#             labels=labels,
-#         )
-#
-#         self.log("test_loss", loss, prog_bar=True, logger=True)
-#         return loss
-#
-#     def configure_optimizers(self):
-#         """configure optimizers"""
-#         return AdamW(self.parameters(), lr=0.0001)
-#
-#     def validation_epoch_end(self, validation_step_outputs):
-#         _loss = [x.cpu() for x in validation_step_outputs]
-#         self.average_validation_loss = np.round(
-#             torch.mean(torch.stack(_loss)).item(),
-#             4,
-#         )
+
+class TextClassification(LightningModule):
+    """PyTorch Lightning Model class"""
+
+    def __init__(
+        self,
+        model,
+        tokenizer,
+    ):
+        super().__init__()
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def forward(self, *args, **kwargs):
+        """forward step"""
+        output = self.model(*args, **kwargs)
+
+        return output.loss, output.logits
+
+    def training_step(self, batch, batch_idx):
+        """training step"""
+
+        loss, outputs = self(
+            **batch
+        )
+
+        self.log(
+            "train_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
+        )
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        """validation step"""
+
+
+        loss, outputs = self(
+            **batch
+        )
+
+        self.log(
+            "val_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
+        )
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        """test step"""
+
+        loss, outputs = self(
+            **batch
+        )
+
+        self.log("test_loss", loss, prog_bar=True, logger=True)
+        return loss
+
+    def configure_optimizers(self):
+        """configure optimizers"""
+        return AdamW(self.parameters(), lr=0.0001)
+
+    def predict_step(self, batch, batch_idx):
+        return self(**batch)[1].argmax(-1) + 1
+
+
 #
 #
 # def predict(
