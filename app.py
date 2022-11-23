@@ -1,5 +1,6 @@
 
 import lightning as L
+import torch.cuda
 from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
 from lai_textclf.clf import TLDR
@@ -19,7 +20,9 @@ class GiveMeAName(TLDR):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-1b1"
+        model_type = "bigscience/bloom-1b7"
+
+        print(torch.cuda.get_device_name())
 
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
@@ -32,6 +35,16 @@ class GiveMeAName(TLDR):
 
     def get_data_source(self) -> str:
         return "YelpReviewFull"
+
+    def get_trainer_settings(self):
+        settings = super().get_trainer_settings()
+
+        from lightning.pytorch.strategies import DeepSpeedStrategy
+
+        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True)
+        settings['precision'] = 'bf16'
+
+        return settings
 
     def run(self):
         super().run()
