@@ -20,7 +20,7 @@ class GiveMeAName(TextClf):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-1b7"
+        model_type = "bigscience/bloom-3b"
 
         print(torch.cuda.get_device_name())
 
@@ -40,28 +40,16 @@ class GiveMeAName(TextClf):
         settings = super().get_trainer_settings()
 
         from lightning.pytorch.strategies import DeepSpeedStrategy
-        from lightning.pytorch.callbacks import RichProgressBar
 
         settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True)
         settings['precision'] = 'bf16'
-        settings['callbacks'] = [RichProgressBar()]
 
         return settings
-
-    def run(self):
-        super().run()
-
-        # # Make a prediction at the end of fine-tuning
-        # if self._trainer.global_rank == 0:
-        #     predictions = predict(self._pl_module.to("cuda"), sample_text)
-        #     print("Input text:\n", sample_text)
-        #     print("Summarized text:\n", predictions[0])
-
 
 app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         GiveMeAName,
-        num_nodes=1,  # Fixme
+        num_nodes=2,
         cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )
