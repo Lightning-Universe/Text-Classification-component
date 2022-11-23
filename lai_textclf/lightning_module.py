@@ -56,6 +56,8 @@ class TextClassification(LightningModule):
         self.log(
             "train_loss", loss, prog_bar=True, logger=True, on_epoch=True, on_step=True
         )
+
+        self.log("max-gpu-mem-gb", torch.cuda.max_memory_allocated() // (1024 ** 3), prog_bar=True, logger=False)
         return loss
 
     def validation_step(self, batch, batch_idx):
