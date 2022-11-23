@@ -13,12 +13,19 @@ Build your platform with Lightning and launch in weeks not months. Focus on the 
 class GiveMeAName(TLDR):
 
     def get_model(self):
-        tokenizer = BloomTokenizerFast.from_pretrained("bigscience/bloom-560m")
+        # choices:
+        # bloom-560m
+        # bloom-1b1
+        # bloom-1b7
+        # bloom-3b
+        # bloom-7b1
+        model_type = "bigscience/bloom-560m"
 
+        tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
         num_labels = 5
-        model = BloomForSequenceClassification.from_pretrained("bigscience/bloom-1b7", num_labels=num_labels, ignore_mismatched_sizes=True)
+        model = BloomForSequenceClassification.from_pretrained(model_type, num_labels=num_labels, ignore_mismatched_sizes=True)
         model.resize_token_embeddings(len(tokenizer))
         model.config.pad_token_id = model.config.eos_token_id
         return model, tokenizer
