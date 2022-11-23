@@ -11,13 +11,10 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader, IterableDataset
 from transformers import PreTrainedTokenizer
 
-class IterableTokenizingDataset(IterableDataset):
-    def __init__(self, tokenizer, dataset: Iterable[Tuple[int, str]], max_token_len: int = 512):
-        self.tokenizer = tokenizer
+class IterableTextClfDataset(IterableDataset):
+    def __init__(self, dataset: Iterable[Tuple[int, str]]):
         self.dataset = dataset
         self.dataset_iter = None
-        self.max_token_len = max_token_len
-
     def __iter__(self):
         self.dataset_iter = iter(self.dataset)
         return self
@@ -45,7 +42,7 @@ class TextClassificationDataModule(LightningDataModule):
         dataset_name: str,
         tokenizer: PreTrainedTokenizer,
         batch_size: int = 8,
-        max_token_len: int = 512,
+        max_token_len: int = 256,
         num_workers: int = min(os.cpu_count() - 1, 1),
     ):
         """
@@ -92,9 +89,9 @@ class TextClassificationDataModule(LightningDataModule):
             _ = next(iter(val_dset))
             _ = next(iter(test_dset))
 
-        self.train_dataset = IterableTokenizingDataset(self.tokenizer, train_dset, self.max_token_len)
-        self.val_dataset = IterableTokenizingDataset(self.tokenizer, val_dset, self.max_token_len)
-        self.test_dataset = IterableTokenizingDataset(self.tokenizer, test_dset, self.max_token_len)
+        self.train_dataset = IterableTextClfDataset(train_dset)
+        self.val_dataset = IterableTextClfDataset(val_dset)
+        self.test_dataset = IterableTextClfDataset(test_dset)
 
     def prepare_data(self):
         self.setup_data(download=True)
