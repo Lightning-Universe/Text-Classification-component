@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Any
 import torch.nn as nn
 import lightning as L
-from lai_tldr.text_summarization.text_summarization import TextSummarization, TextSummarizationDataModule
+
+from lai_textclf.data import TextClassificationDataModule
+from lai_textclf.lightning_module import TextClassification
 
 
 class TLDR(L.LightningWork, ABC):
@@ -42,8 +44,8 @@ class TLDR(L.LightningWork, ABC):
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         module, tokenizer = self.get_model()
-        pl_module = TextSummarization(model=module, tokenizer=tokenizer)
-        datamodule = TextSummarizationDataModule(data_source=self.get_data_source(), tokenizer=tokenizer)
+        pl_module = TextClassification(model=module, tokenizer=tokenizer)
+        datamodule = TextClassificationDataModule(dataset_name=self.get_data_source(), tokenizer=tokenizer)
         trainer = L.Trainer(**self.get_trainer_settings())
 
         self._pl_module = pl_module
