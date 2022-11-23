@@ -6,3 +6,5 @@ __pycache__/
 lightning_logs
 *.ckpt
 *.events.out.tfevents.*
+.cache
+.shared
