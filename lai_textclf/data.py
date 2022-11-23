@@ -1,0 +1,141 @@
+from typing import Iterable, Tuple
+
+import numpy as np
+import torch
+import os
+import torchtext
+import inspect
+from lightning.pytorch import LightningDataModule, LightningModule
+
+from torch.optim import AdamW
+from torch.utils.data import DataLoader, IterableDataset
+from transformers import PreTrainedTokenizer
+
+class IterableTokenizingDataset(IterableDataset):
+    def __init__(self, tokenizer, dataset: Iterable[Tuple[int, str]], max_token_len: int = 512):
+        self.tokenizer = tokenizer
+        self.dataset = dataset
+        self.dataset_iter = None
+        self.max_token_len = max_token_len
+
+    def __iter__(self):
+        self.dataset_iter = iter(self.dataset)
+        return self
+
+    def __next__(self):
+        data = next(self.dataset_iter)
+
+        if isinstance(data, tuple) and isinstance(data[0], (int, float)):
+            label, text, *_ = data
+        else:
+            label, text = None, data
+
+        text_encoding = self.tokenizer(
+            text,
+            max_length=self.max_token_len,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True,
+            add_special_tokens=True,
+            return_tensors="pt",
+        )
+
+        return dict(
+            text_input_ids=text_encoding["input_ids"].flatten(),
+            text_attention_mask=text_encoding["attention_mask"].flatten(),
+            labels=int(label -1), # labels need to start at 0
+        )
+
+
+
+class TextClassificationDataModule(LightningDataModule):
+    """PyTorch Lightning data class"""
+
+    def __init__(
+        self,
+        dataset_name: str,
+        tokenizer: PreTrainedTokenizer,
+        batch_size: int = 8,
+        max_token_len: int = 512,
+        num_workers: int = min(os.cpu_count() - 1, 1),
+    ):
+        """
+        initiates a PyTorch Lightning Data Module
+        Args:
+            data_set: the torchtext dataset name to use
+            tokenizer (PreTrainedTokenizer): PreTrainedTokenizer (T5Tokenizer, MT5Tokenizer, or ByT5Tokenizer)
+            batch_size (int, optional): batch size. Defaults to 4.
+            max_token_len (int, optional): max token length of source text. Defaults to 512.
+
+        """
+        super().__init__()
+        self.dataset_name = dataset_name
+        self.batch_size = batch_size
+        self.tokenizer = tokenizer
+        self.max_token_len = max_token_len
+        self.num_workers = num_workers
+        self.dset_cls = None
+        self.train_split = None
+        self.val_split = None
+        self.train_dataset = None
+        self.val_dataset = None
+        self.test_dataset = None
+
+    def setup_data(self, download: bool = False):
+        self.dset_cls = getattr(torchtext.datasets, self.dataset_name)
+
+        choices_split = inspect.signature(self.dset_cls).parameters['split'].default
+
+        self.train_split = choices_split[0]
+        self.val_split = choices_split[1]
+        self.test_split = choices_split[-1]
+
+        data_root_dir = f'.cache/torchtext/{self.dataset_name}'
+        train_dset = self.dset_cls(root=data_root_dir, split=self.train_split)
+        val_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
+        test_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
+
+        if download:
+            print("Downloading Data, this may take some time. Please be patient!")
+
+            # triggers downloads
+            _ = next(iter(train_dset))
+            _ = next(iter(val_dset))
+            _ = next(iter(test_dset))
+
+        self.train_dataset = IterableTokenizingDataset(self.tokenizer, train_dset, self.max_token_len)
+        self.val_dataset = IterableTokenizingDataset(self.tokenizer, val_dset, self.max_token_len)
+        self.test_dataset = IterableTokenizingDataset(self.tokenizer, test_dset, self.max_token_len)
+
+    def prepare_data(self):
+        self.setup_data(download=True)
+
+    def setup(self, stage=None):
+        self.setup_data(download=False)
+
+    def train_dataloader(self):
+        """training dataloader"""
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+        )
+
+    def test_dataloader(self):
+        """test dataloader"""
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+        )
+
+    def val_dataloader(self):
+        """validation dataloader"""
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+        )
