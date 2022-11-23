@@ -1,0 +1,8 @@
+.vscode/
+__pycache__/
+*.csv
+*.egg-info/
+.lightning
+lightning_logs
+*.ckpt
+*.events.out.tfevents.*
