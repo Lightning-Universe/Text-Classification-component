@@ -3,7 +3,7 @@ import lightning as L
 import torch.cuda
 from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
-from lai_textclf.clf import TLDR
+from lai_textclf.clf import TextClf
 
 sample_text = """
 ML Ops platforms come in many flavors from platforms that train models to platforms that label data and auto-retrain models. To build an ML Ops platform requires dozens of engineers, multiple years and 10+ million in funding. The majority of that work will go into infrastructure, multi-cloud, user management, consumption models, billing, and much more.
@@ -11,7 +11,7 @@ Build your platform with Lightning and launch in weeks not months. Focus on the 
 """
 
 
-class GiveMeAName(TLDR):
+class GiveMeAName(TextClf):
 
     def get_model(self):
         # choices:
@@ -40,9 +40,11 @@ class GiveMeAName(TLDR):
         settings = super().get_trainer_settings()
 
         from lightning.pytorch.strategies import DeepSpeedStrategy
+        from lightning.pytorch.callbacks import RichProgressBar
 
-        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True)
+        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True)
         settings['precision'] = 'bf16'
+        settings['callbacks'] = [RichProgressBar()]
 
         return settings
 

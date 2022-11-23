@@ -8,7 +8,7 @@ from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification
 
 
-class TLDR(L.LightningWork, ABC):
+class TextClf(L.LightningWork, ABC):
     """Finetune on a text summarization task."""
 
     def __init__(self, **kwargs):
