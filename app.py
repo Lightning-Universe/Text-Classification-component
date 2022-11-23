@@ -1,6 +1,6 @@
 # !pip install 'git+https://github.com/Lightning-AI/LAI-TLDR'
 import lightning as L
-from transformers import GPT2Tokenizer, GPT2ForSequenceClassification
+from transformers import BloomTokenizerFast, BloomForSequenceClassification
 
 from lai_textclf.clf import TLDR
 
@@ -13,12 +13,12 @@ Build your platform with Lightning and launch in weeks not months. Focus on the 
 class GiveMeAName(TLDR):
 
     def get_model(self):
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        tokenizer = BloomTokenizerFast.from_pretrained("bigscience/bloom-560m")
+
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
         num_labels = 5
-        model = GPT2ForSequenceClassification.from_pretrained("gpt2", num_labels=num_labels,
-                                                              ignore_mismatched_sizes=True)
+        model = BloomForSequenceClassification.from_pretrained("bigscience/bloom-1b7", num_labels=num_labels, ignore_mismatched_sizes=True)
         model.resize_token_embeddings(len(tokenizer))
         model.config.pad_token_id = model.config.eos_token_id
         return model, tokenizer
