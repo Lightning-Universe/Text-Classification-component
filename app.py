@@ -40,6 +40,8 @@ class GiveMeAName(TextClf):
 
         settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True)
         settings['precision'] = 'bf16'
+        settings['limit_train_batches'] = 10
+        settings['limit_val_batches'] = 10
 
         return settings
 
