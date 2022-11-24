@@ -78,7 +78,6 @@ class TextClassificationDataModule(LightningDataModule):
         self.test_split = choices_split[-1]
 
         data_root_dir = Path.home() / f".cache/torchtext/{self.dataset_name}"
-
         train_dset = self.dset_cls(root=data_root_dir, split=self.train_split)
         val_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
         test_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
@@ -122,7 +121,6 @@ class TextClassificationDataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        """validation dataloader"""
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
