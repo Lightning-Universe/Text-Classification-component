@@ -8,7 +8,7 @@ sample_text = "Blue is the most beautiful color!"
 
 class MyTextClassification(TextClf):
     def get_model(self):
-        # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b, bloom-7b1
+        # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
