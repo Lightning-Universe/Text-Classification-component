@@ -87,11 +87,3 @@ class TextClassification(LightningModule):
 
     def predict_step(self, batch, batch_idx):
         return self(**batch)[1].argmax(-1) + 1
-
-
-def predict(module: LightningModule, source_text: str):
-    inputs = module.tokenizer(source_text, return_tensors="pt")
-    with torch.no_grad():
-        _, logits = module(**inputs)
-    predicted_class_id = logits.argmax().item()
-    return predicted_class_id

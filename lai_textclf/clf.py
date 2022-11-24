@@ -1,6 +1,8 @@
 import os
 from abc import ABC, abstractmethod
 from typing import Tuple, Any
+
+import torch
 import torch.nn as nn
 import lightning as L
 
@@ -20,8 +22,8 @@ class TextClf(L.LightningWork, ABC):
         """Return your large transformer language model here."""
 
     @abstractmethod
-    def get_data_source(self) -> str:
-        """Return a path to a file or a public URL that can be downloaded."""
+    def get_dataset_name(self) -> str:
+        """Return the name of a torchtext dataset for text classification."""
 
     def get_trainer_settings(self):
         """Override this to change the Lightning Trainer default settings for finetuning."""
@@ -50,7 +52,7 @@ class TextClf(L.LightningWork, ABC):
         module, tokenizer = self.get_model()
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
         datamodule = TextClassificationDataModule(
-            dataset_name=self.get_data_source(), tokenizer=tokenizer
+            dataset_name=self.get_dataset_name(), tokenizer=tokenizer
         )
         trainer = L.Trainer(**self.get_trainer_settings())
 
@@ -63,3 +65,18 @@ class TextClf(L.LightningWork, ABC):
         for root, dirs, files in os.walk("lightning_logs", topdown=False):
             for name in files:
                 self.drive.put(os.path.join(root, name))
+
+    def predict(self, source_text):
+        if self._trainer is not None and self._trainer.global_rank > 0:
+            return
+
+        pl_module = self._pl_module
+        if pl_module is None:
+            module, tokenizer = self.get_model()
+            pl_module = TextClassification(model=module, tokenizer=tokenizer)
+
+        inputs = pl_module.tokenizer(source_text, return_tensors="pt")
+        with torch.no_grad():
+            _, logits = pl_module(**inputs)
+        predicted_class_id = logits.argmax().item()
+        return predicted_class_id
