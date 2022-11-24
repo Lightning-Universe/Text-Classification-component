@@ -65,7 +65,7 @@ class TextClf(L.LightningWork, ABC):
 
         trainer.fit(pl_module, datamodule)
 
-        print("Uploading checkpoints and logs...")
+        print("Uploading checkpoints and logs... It can take several minutes for very large models")
         for root, dirs, files in os.walk("lightning_logs", topdown=False):
             for name in files:
                 self.drive.put(os.path.join(root, name))
