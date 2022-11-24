@@ -8,7 +8,6 @@ sample_text = "Blue is the most beautiful color!"
 
 
 class GiveMeAName(TextClf):
-
     def get_model(self):
         # choices:
         # bloom-560m
@@ -41,11 +40,12 @@ class GiveMeAName(TextClf):
 
         from lightning.pytorch.strategies import DeepSpeedStrategy
 
-        settings['strategy'] = DeepSpeedStrategy(stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True)
-        settings['precision'] = 'bf16'
-        settings['limit_train_batches'] = 10
-        settings['limit_val_batches'] = 10
-
+        settings["strategy"] = DeepSpeedStrategy(
+            stage=3, offload_optimizer=True, offload_parameters=True, pin_memory=True
+        )
+        settings["precision"] = "bf16"
+        settings["limit_train_batches"] = 10
+        settings["limit_val_batches"] = 10
 
         return settings
 
