@@ -15,7 +15,7 @@ class GiveMeAName(TextClf):
         # bloom-1b7
         # bloom-3b
         # bloom-7b1
-        model_type = "bigscience/bloom-1b1"
+        model_type = "bigscience/bloom-3b"
 
         print(torch.cuda.get_device_name())
 
@@ -23,9 +23,11 @@ class GiveMeAName(TextClf):
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
         num_labels = 5
+
         model = BloomForSequenceClassification.from_pretrained(
             model_type, num_labels=num_labels, ignore_mismatched_sizes=True
         )
+
         model.resize_token_embeddings(len(tokenizer))
         model.config.pad_token_id = model.config.eos_token_id
         return model, tokenizer

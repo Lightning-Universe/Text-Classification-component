@@ -1,5 +1,6 @@
 import inspect
 import os
+from pathlib import Path
 from typing import Iterable, Tuple
 
 import torch
@@ -76,7 +77,8 @@ class TextClassificationDataModule(LightningDataModule):
         self.val_split = choices_split[1]
         self.test_split = choices_split[-1]
 
-        data_root_dir = f"~/.cache/torchtext/{self.dataset_name}"
+        data_root_dir = Path.home() / f".cache/torchtext/{self.dataset_name}"
+
         train_dset = self.dset_cls(root=data_root_dir, split=self.train_split)
         val_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
         test_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
