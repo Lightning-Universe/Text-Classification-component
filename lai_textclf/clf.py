@@ -1,8 +1,10 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Tuple, Any
-import torch.nn as nn
+
+from typing import Any, Tuple
+
 import lightning as L
+import torch.nn as nn
 
 from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification

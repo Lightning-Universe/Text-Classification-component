@@ -1,7 +1,6 @@
-
 import lightning as L
 import torch.cuda
-from transformers import BloomTokenizerFast, BloomForSequenceClassification
+from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
 from lai_textclf import TextClf, predict
 
@@ -25,7 +24,11 @@ class GiveMeAName(TextClf):
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
         num_labels = 5
-        model = BloomForSequenceClassification.from_pretrained(model_type, num_labels=num_labels, ignore_mismatched_sizes=True)
+
+        model = BloomForSequenceClassification.from_pretrained(
+            model_type, num_labels=num_labels, ignore_mismatched_sizes=True
+        )
+
         model.resize_token_embeddings(len(tokenizer))
         model.config.pad_token_id = model.config.eos_token_id
         return model, tokenizer
@@ -43,6 +46,7 @@ class GiveMeAName(TextClf):
         settings['limit_train_batches'] = 10
         settings['limit_val_batches'] = 10
 
+
         return settings
 
     def run(self):
@@ -56,7 +60,7 @@ class GiveMeAName(TextClf):
 app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         GiveMeAName,
-        num_nodes=2,
+        num_nodes=1,
         cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )
