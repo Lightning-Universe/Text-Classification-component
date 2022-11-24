@@ -24,7 +24,7 @@ class TextClassification(LightningModule):
         self.log("train_loss", loss, prog_bar=True, on_epoch=True, on_step=True)
         self.log(
             "max-gpu-mem-gb",
-            torch.cuda.max_memory_allocated() // (1024**3),
+            torch.cuda.max_memory_allocated() / (1024**3),
             prog_bar=True,
             logger=False,
         )
