@@ -94,5 +94,4 @@ def predict(module: LightningModule, source_text: str):
     with torch.no_grad():
         _, logits = module(**inputs)
     predicted_class_id = logits.argmax().item()
-    label = module.model.config.id2label[predicted_class_id]
-    return label
+    return predicted_class_id

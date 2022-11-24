@@ -48,9 +48,10 @@ class GiveMeAName(TextClf):
     def run(self):
         super().run()
         if self._trainer.global_rank == 0:
-            prediction = predict(self._pl_module, sample_text)
-            print("Input text:\n", sample_text)
-            print("Predicted label:\n", prediction)
+            class_id = predict(self._pl_module, sample_text)
+            stars = class_id + 1
+            print("Review text:\n", sample_text)
+            print("Predicted rating:\n", "★" * stars)
 
 
 app = L.LightningApp(
