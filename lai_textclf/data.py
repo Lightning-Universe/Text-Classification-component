@@ -121,7 +121,6 @@ class TextClassificationDataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
-        """validation dataloader"""
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
