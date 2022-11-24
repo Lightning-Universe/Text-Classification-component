@@ -33,12 +33,10 @@ class TextClassification(LightningModule):
     def validation_step(self, batch, batch_idx):
         loss, outputs = self(**batch)
         self.log("val_loss", loss, prog_bar=True)
-        return loss
 
     def test_step(self, batch, batch_idx):
         loss, outputs = self(**batch)
         self.log("test_loss", loss, prog_bar=True)
-        return loss
 
     def configure_optimizers(self):
         """configure optimizers"""

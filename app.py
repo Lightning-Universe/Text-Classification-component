@@ -25,7 +25,9 @@ class MyTextClassification(TextClf):
         settings = super().get_trainer_settings()
         settings["strategy"] = "deepspeed_stage_3_offload"
         settings["precision"] = "bf16"
-        settings["max_steps"] = 10
+        settings["max_epochs"] = 2
+        settings["limit_train_batches"] = 10
+        settings["limit_val_batches"] = 10
         return settings
 
     def run(self):
