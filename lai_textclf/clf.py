@@ -19,7 +19,7 @@ class TextClf(L.LightningWork, ABC):
 
     @property
     def is_main_process(self):
-        return self._trainer is not None and self._trainer.global_rank > 0
+        return self._trainer is not None and self._trainer.global_rank == 0
 
     @abstractmethod
     def get_model(self) -> Tuple[nn.Module, Any]:
