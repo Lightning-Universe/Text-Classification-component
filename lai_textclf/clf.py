@@ -1,10 +1,10 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Tuple, Any
+from typing import Any, Tuple
 
+import lightning as L
 import torch
 import torch.nn as nn
-import lightning as L
 
 from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification
@@ -16,6 +16,10 @@ class TextClf(L.LightningWork, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.drive = L.app.storage.Drive("lit://artifacts")
+
+    @property
+    def is_main_process(self):
+        return self._trainer is not None and self._trainer.global_rank > 0
 
     @abstractmethod
     def get_model(self) -> Tuple[nn.Module, Any]:
@@ -67,9 +71,6 @@ class TextClf(L.LightningWork, ABC):
                 self.drive.put(os.path.join(root, name))
 
     def predict(self, source_text):
-        if self._trainer is not None and self._trainer.global_rank > 0:
-            return
-
         pl_module = self._pl_module
         if pl_module is None:
             module, tokenizer = self.get_model()
