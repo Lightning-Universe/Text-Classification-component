@@ -1,4 +1,4 @@
-# !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification
+# !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
