@@ -92,16 +92,20 @@ app = L.LightningApp(
 
 ```
 
-### Running locally
+### Running on cloud
+
+```bash
+lightning run app app.py --cloud
+```
+
+Don't want to use the public cloud? Contact us at `product@lightning.ai` for early access to run on your private cluster (BYOC)!
+
+
+### Running locally (limited)
+
+You can run also locally on a single node, but you will require multiple GPUs with enough memory depending on the
+model size you choose.
 
 ```bash
 lightning run app app.py --setup
 ```
-
-### Running on cloud
-
-```bash
-lightning run app app.py --setup --cloud
-```
-
-Don't want to use the public cloud? Contact us at `product@lightning.ai` for early access to run on your private cluster (BYOC)!
