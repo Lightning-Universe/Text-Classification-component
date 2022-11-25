@@ -80,10 +80,18 @@ app = L.LightningApp(
     )
 )
 
-
 ```
 
-### Running locally
+### Running on cloud
+
+```bash
+lightning run app app.py --setup --cloud
+```
+
+Don't want to use the public cloud? Contact us at `product@lightning.ai` for early access to run on your private cluster (BYOC)!
+
+
+### Running locally (limited)
 This example is optimized in for the cloud. To run it locally, choose a smaller model, change the trainer settings like so:
 ```python
 class MyTextClassification(TextClf):
@@ -101,12 +109,4 @@ Then run the app with
 ```bash
 lightning run app app.py --setup
 ```
-
-### Running on cloud
-
-```bash
-lightning run app app.py --setup --cloud
-```
-
-Don't want to use the public cloud? Contact us at `product@lightning.ai` for early access to run on your private cluster (BYOC)!
 
