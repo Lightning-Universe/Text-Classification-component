@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import lightning as L
 import torch
@@ -18,16 +18,16 @@ class TextClf(L.LightningWork, ABC):
         self.drive = L.app.storage.Drive("lit://artifacts")
 
     @property
-    def is_main_process(self):
+    def is_main_process(self) -> bool:
         return self._trainer is not None and self._trainer.global_rank == 0
 
     @abstractmethod
-    def get_model(self) -> Tuple[nn.Module, Any]:
+    def get_model(self, num_labels: int) -> Tuple[nn.Module, Any]:
         """Return your large transformer language model here."""
 
     @abstractmethod
-    def get_dataset_name(self) -> str:
-        """Return the name of a torchtext dataset for text classification."""
+    def get_dataset_name(self) -> Tuple[str, int]:
+        """Return the name of a torchtext dataset for text classification and number of classification labels"""
 
     def get_trainer_settings(self):
         """Override this to change the Lightning Trainer default settings for finetuning."""
@@ -53,10 +53,11 @@ class TextClf(L.LightningWork, ABC):
         # for huggingface/transformers
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-        module, tokenizer = self.get_model()
+        dset_name, num_labels = self.get_dataset_name()
+        module, tokenizer = self.get_model(num_labels)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
         datamodule = TextClassificationDataModule(
-            dataset_name=self.get_dataset_name(), tokenizer=tokenizer
+            dataset_name=dset_name, tokenizer=tokenizer
         )
         trainer = L.Trainer(**self.get_trainer_settings())
 
@@ -65,19 +66,20 @@ class TextClf(L.LightningWork, ABC):
 
         trainer.fit(pl_module, datamodule)
 
-        print("Uploading checkpoints and logs... It can take several minutes for very large models")
-        for root, dirs, files in os.walk("lightning_logs", topdown=False):
-            for name in files:
-                self.drive.put(os.path.join(root, name))
+        if self.is_main_process:
+            print("Uploading checkpoints and logs... It can take several minutes for very large models")
+            for root, dirs, files in os.walk("lightning_logs", topdown=False):
+                for name in files:
+                    self.drive.put(os.path.join(root, name))
 
-    def predict(self, source_text):
+    def predict(self, source_text, num_labels: Optional[int] = None):
         pl_module = self._pl_module
         if pl_module is None:
-            module, tokenizer = self.get_model()
+            assert num_labels is not None
+            module, tokenizer = self.get_model(num_labels)
             pl_module = TextClassification(model=module, tokenizer=tokenizer)
 
-        inputs = pl_module.tokenizer(source_text, return_tensors="pt")
+        inputs = pl_module.tokenizer([source_text], return_tensors="pt")
         with torch.no_grad():
-            _, logits = pl_module(**inputs)
-        predicted_class_id = logits.argmax().item()
+            predicted_class_id = pl_module.predict_step(inputs, 0)
         return predicted_class_id

@@ -62,8 +62,6 @@ class TextClassificationDataModule(LightningDataModule):
         self.max_token_len = max_token_len
         self.num_workers = num_workers
         self.dset_cls = None
-        self.train_split = None
-        self.val_split = None
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
@@ -73,14 +71,14 @@ class TextClassificationDataModule(LightningDataModule):
 
         choices_split = inspect.signature(self.dset_cls).parameters["split"].default
 
-        self.train_split = choices_split[0]
-        self.val_split = choices_split[1]
-        self.test_split = choices_split[-1]
+        train_split = choices_split[0]
+        val_split = choices_split[1]
+        test_split = choices_split[-1]
 
         data_root_dir = Path.home() / f".cache/torchtext/{self.dataset_name}"
-        train_dset = self.dset_cls(root=data_root_dir, split=self.train_split)
-        val_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
-        test_dset = self.dset_cls(root=data_root_dir, split=self.val_split)
+        train_dset = self.dset_cls(root=data_root_dir, split=train_split)
+        val_dset = self.dset_cls(root=data_root_dir, split=val_split)
+        test_dset = self.dset_cls(root=data_root_dir, split=test_split)
 
         if download:
             print("Downloading Data, this may take some time. Please be patient!")
@@ -90,9 +88,10 @@ class TextClassificationDataModule(LightningDataModule):
             _ = next(iter(val_dset))
             _ = next(iter(test_dset))
 
-        self.train_dataset = IterableTextClfDataset(train_dset)
-        self.val_dataset = IterableTextClfDataset(val_dset)
-        self.test_dataset = IterableTextClfDataset(test_dset)
+        else:
+            self.train_dataset = IterableTextClfDataset(train_dset)
+            self.val_dataset = IterableTextClfDataset(val_dset)
+            self.test_dataset = IterableTextClfDataset(test_dset)
 
     def prepare_data(self):
         self.setup_data(download=True)
