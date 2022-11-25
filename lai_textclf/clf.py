@@ -45,7 +45,7 @@ class TextClf(L.LightningWork, ABC):
         )
         return dict(
             callbacks=[early_stopping, checkpoints],
-            strategy="deepspeed_stage_3",
+            strategy="deepspeed_stage_3_offload",
             precision=16
         )
 
