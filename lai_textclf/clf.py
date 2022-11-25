@@ -44,9 +44,9 @@ class TextClf(L.LightningWork, ABC):
             mode="min",
         )
         return dict(
-            max_epochs=1,
             callbacks=[early_stopping, checkpoints],
             strategy="deepspeed_stage_3",
+            precision=16
         )
 
     def run(self):
