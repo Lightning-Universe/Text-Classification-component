@@ -6,4 +6,3 @@ lightning_logs
 .shared
 lightning_logs
 tests
-requirements_test.txt
