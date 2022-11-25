@@ -40,8 +40,7 @@ To run paste the following code snippet in a file `app.py`:
 
 
 ```python
-
-# ! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification
+# !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
@@ -65,15 +64,6 @@ class MyTextClassification(TextClf):
     def get_dataset_name(self) -> str:
         return "YelpReviewFull"
 
-    def get_trainer_settings(self):
-        settings = super().get_trainer_settings()
-        settings["strategy"] = "deepspeed_stage_3_offload"
-        settings["precision"] = "bf16"
-        settings["max_epochs"] = 2
-        settings["limit_train_batches"] = 10
-        settings["limit_val_batches"] = 10
-        return settings
-
     def run(self):
         super().run()
         if self.is_main_process:
@@ -95,17 +85,28 @@ app = L.LightningApp(
 ### Running on cloud
 
 ```bash
-lightning run app app.py --cloud
+lightning run app app.py --setup --cloud
 ```
 
 Don't want to use the public cloud? Contact us at `product@lightning.ai` for early access to run on your private cluster (BYOC)!
 
 
 ### Running locally (limited)
+This example is optimized in for the cloud. To run it locally, choose a smaller model, change the trainer settings like so:
+```python
+class MyTextClassification(TextClf):
+    ...
+    
+    def get_trainer_settings(self):
+        settings = super().get_trainer_settings()
 
-You can run also locally on a single node, but you will require multiple GPUs with enough memory depending on the
-model size you choose.
+        settings.pop('strategy')
+        return settings
+```
+This will avoid using the deepspeed strategy for training which is only compatible with multiple GPUs for model sharding.
+Then run the app with 
 
 ```bash
 lightning run app app.py --setup
 ```
+

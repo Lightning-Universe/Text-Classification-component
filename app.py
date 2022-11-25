@@ -1,4 +1,5 @@
-# ! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification
+# !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification
+
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
@@ -21,15 +22,6 @@ class MyTextClassification(TextClf):
 
     def get_dataset_name(self) -> str:
         return "YelpReviewFull"
-
-    def get_trainer_settings(self):
-        settings = super().get_trainer_settings()
-        settings["strategy"] = "deepspeed_stage_3_offload"
-        settings["precision"] = "bf16"
-        settings["max_epochs"] = 2
-        settings["limit_train_batches"] = 10
-        settings["limit_val_batches"] = 10
-        return settings
 
     def run(self):
         super().run()
