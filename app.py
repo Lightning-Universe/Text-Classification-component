@@ -40,9 +40,8 @@ app = L.LightningApp(
             disk_size=50,
             mounts=L.storage.Mount(
                 source="s3://pl-flash-data/lai-llm/lai-text-classification/weights/",
-                mount_path="/home/zeus/.cache/huggingface/hub"
+                mount_path="/mnt/weights"
             )
-            # Or we could set environ var TRANSFORMERS_CACHE = '/mnt/...' to avoid explicit home prefix
         ),
     )
 )

@@ -1,19 +1,30 @@
 import os
+import subprocess
 from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
 import lightning as L
 import torch
 import torch.nn as nn
+from lightning import BuildConfig
 
 from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification
+
+
+class SetupBuildConfig(BuildConfig):
+    def build_commands(self):
+        return [
+            "mkdir -p ~/.cache/huggingface",
+            "cp -r /mnt/weights ~/.cache/huggingface/hub",
+        ]
 
 
 class TextClf(L.LightningWork, ABC):
     """Finetune on a text summarization task."""
 
     def __init__(self, **kwargs):
+        kwargs.setdefault("cloud_build_config", SetupBuildConfig())
         super().__init__(**kwargs)
         self.drive = L.app.storage.Drive("lit://artifacts")
 
