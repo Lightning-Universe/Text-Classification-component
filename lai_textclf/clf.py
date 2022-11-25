@@ -1,18 +1,16 @@
 import os
-import subprocess
 from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
 import lightning as L
 import torch
 import torch.nn as nn
-from lightning import BuildConfig
 
 from lai_textclf.data import TextClassificationDataModule
 from lai_textclf.lightning_module import TextClassification
 
 
-class SetupBuildConfig(BuildConfig):
+class SetupBuildConfig(L.BuildConfig):
     def build_commands(self):
         return [
             "mkdir -p ~/.cache/huggingface",
