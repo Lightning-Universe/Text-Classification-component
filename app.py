@@ -35,6 +35,14 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         MyTextClassification,
         num_nodes=2,
-        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
+        cloud_compute=L.CloudCompute(
+            name="gpu-fast-multi",
+            disk_size=50,
+            mounts=L.storage.Mount(
+                source="s3://pl-flash-data/lai-llm/lai-text-classification/weights/",
+                mount_path="/home/zeus/.cache/huggingface/hub"
+            )
+            # Or we could set environ var TRANSFORMERS_CACHE = '/mnt/...' to avoid explicit home prefix
+        ),
     )
 )
