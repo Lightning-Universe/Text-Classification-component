@@ -7,3 +7,4 @@ lightning_logs
 *.ckpt
 *.events.out.tfevents.*
 .shared
+.idea
