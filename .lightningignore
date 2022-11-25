@@ -5,3 +5,5 @@ lightning_logs
 .cache
 .shared
 lightning_logs
+tests
+requirements_test.txt

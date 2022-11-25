@@ -9,19 +9,19 @@ sample_text = "Blue is the most beautiful color!"
 
 
 class MyTextClassification(TextClf):
-    def get_model(self):
+    def get_model(self, num_labels: int):
         # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
         model = BloomForSequenceClassification.from_pretrained(
-            model_type, num_labels=5, ignore_mismatched_sizes=True
+            model_type, num_labels=num_labels, ignore_mismatched_sizes=True
         )
         return model, tokenizer
 
-    def get_dataset_name(self) -> str:
-        return "YelpReviewFull"
+    def get_dataset_name(self):
+        return "YelpReviewFull", 5
 
     def run(self):
         super().run()
