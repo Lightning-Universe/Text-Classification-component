@@ -55,7 +55,7 @@ jobs:
       env:
         PACKAGE_NAME: ${{ matrix.pkg-name }}
       run: |
-        pip install . -r requirements_test.txt --upgrade --find-links ${TORCH_URL}
+        pip install . -r requirements_test.txt --upgrade
         pip list
 
     - name: Testing PyTorch
