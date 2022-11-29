@@ -40,7 +40,7 @@ class TextClassificationData(LightningDataModule):
         tokenizer: PreTrainedTokenizer,
         batch_size: int = 4,
         max_token_len: int = 256,
-        num_workers: int = min(os.cpu_count() - 1, 1),
+        num_workers: int = 2,
     ):
 
         super().__init__()
@@ -51,11 +51,7 @@ class TextClassificationData(LightningDataModule):
         self.max_token_len = max_token_len
         self.num_workers = num_workers
 
-    def prepare_data(self):
-        # triggers potential downloads
-        _ = next(iter(self.train_dataset))
-        _ = next(iter(self.val_dataset))
-
+    def setup(self, stage=None):
         self.train_dataset = IterableTextClfDataset(self.train_dataset)
         self.val_dataset = IterableTextClfDataset(self.val_dataset)
 
