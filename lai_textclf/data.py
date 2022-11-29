@@ -51,6 +51,11 @@ class TextClassificationData(LightningDataModule):
         self.max_token_len = max_token_len
         self.num_workers = num_workers
 
+    def prepare_data(self) -> None:
+        # possibly trigger downloads
+        _ = next(iter(self.train_dataset))
+        _ = next(iter(self.val_dataset))
+
     def setup(self, stage=None):
         self.train_dataset = IterableTextClfDataset(self.train_dataset)
         self.val_dataset = IterableTextClfDataset(self.val_dataset)
