@@ -26,28 +26,13 @@ class TextClf(L.LightningWork, ABC):
         """Return your large transformer language model here."""
 
     @abstractmethod
-    def get_dataset_name(self) -> Tuple[str, int]:
+    def get_dataset(self) -> Tuple[torch.utils.data.Dataset, int]:
         """Return the name of a torchtext dataset for text classification and number of classification labels"""
 
     def get_trainer_settings(self):
         """Override this to change the Lightning Trainer default settings for finetuning."""
-        early_stopping = L.pytorch.callbacks.EarlyStopping(
-            monitor="val_loss",
-            min_delta=0.00,
-            verbose=True,
-            mode="min",
-        )
-        checkpoints = L.pytorch.callbacks.ModelCheckpoint(
-            # dirpath="drive",
-            save_top_k=3,
-            monitor="val_loss",
-            mode="min",
-        )
-        return dict(
-            callbacks=[early_stopping, checkpoints],
-            strategy="deepspeed_stage_3_offload",
-            precision=16
-        )
+
+        return dict(strategy="deepspeed_stage_3_offload", precision=16)
 
     def run(self):
         # for huggingface/transformers
@@ -67,7 +52,9 @@ class TextClf(L.LightningWork, ABC):
         trainer.fit(pl_module, datamodule)
 
         if self.is_main_process:
-            print("Uploading checkpoints and logs... It can take several minutes for very large models")
+            print(
+                "Uploading checkpoints and logs... It can take several minutes for very large models"
+            )
             for root, dirs, files in os.walk("lightning_logs", topdown=False):
                 for name in files:
                     self.drive.put(os.path.join(root, name))

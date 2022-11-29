@@ -1,5 +1,9 @@
+from typing import Sequence, Union
+
+import lightning as L
 import torch
 from lightning.pytorch import LightningModule
+from lightning.pytorch.callbacks import Callback
 from torch.optim import AdamW
 
 
@@ -34,13 +38,21 @@ class TextClassification(LightningModule):
         loss, outputs = self(**batch)
         self.log("val_loss", loss, prog_bar=True)
 
-    def test_step(self, batch, batch_idx):
-        loss, outputs = self(**batch)
-        self.log("test_loss", loss, prog_bar=True)
-
     def configure_optimizers(self):
         """configure optimizers"""
         return AdamW(self.parameters(), lr=0.0001)
 
-    def predict_step(self, batch, batch_idx):
-        return self(**batch)[1].argmax(-1) + 1
+    def configure_callbacks(self) -> Union[Sequence[Callback], Callback]:
+        early_stopping = L.pytorch.callbacks.EarlyStopping(
+            monitor="val_loss",
+            min_delta=0.00,
+            verbose=True,
+            mode="min",
+        )
+        checkpoints = L.pytorch.callbacks.ModelCheckpoint(
+            save_top_k=3,
+            monitor="val_loss",
+            mode="min",
+        )
+
+        return [early_stopping, checkpoints]
