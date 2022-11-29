@@ -29,7 +29,7 @@ class MyTextClassification(TextClf):
         )
         val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
         num_labels = 5
-        return to_map_style_dataset(train_dset), to_map_style_dataset(val_dset), num_labels
+        return train_dset, val_dset, num_labels
 
     def get_trainer_settings(self):
         return dict(strategy="deepspeed_stage_3_offload", precision=16)
@@ -50,6 +50,6 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         MyTextClassification,
         num_nodes=2,
-        cloud_compute=L.CloudCompute("gpu", disk_size=50),
+        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )

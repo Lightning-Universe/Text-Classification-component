@@ -2,8 +2,10 @@ import os
 from typing import Iterable, Tuple
 
 import torch
+import torchtext
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, IterableDataset
+from torchtext.data import to_map_style_dataset
 from transformers import PreTrainedTokenizer
 
 
@@ -52,13 +54,17 @@ class TextClassificationData(LightningDataModule):
         self.num_workers = num_workers
 
     def prepare_data(self) -> None:
-        # possibly trigger downloads
-        _ = next(iter(self.train_dataset))
-        _ = next(iter(self.val_dataset))
+        data_root_path = os.path.expanduser("~/.cache/torchtext")
+        train_dset = torchtext.datasets.YelpReviewFull(
+            root=data_root_path, split="train"
+        )
+        val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
+        to_map_style_dataset(train_dset)
+        to_map_style_dataset(val_dset)
 
     def setup(self, stage=None):
-        self.train_dataset = IterableTextClfDataset(self.train_dataset)
-        self.val_dataset = IterableTextClfDataset(self.val_dataset)
+        self.train_dataset = IterableTextClfDataset(to_map_style_dataset(self.train_dataset))
+        self.val_dataset = IterableTextClfDataset(to_map_style_dataset(self.val_dataset))
 
     def train_dataloader(self):
         return DataLoader(
