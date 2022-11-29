@@ -1,10 +1,7 @@
-import inspect
 import os
-from pathlib import Path
 from typing import Iterable, Tuple
 
 import torch
-import torchtext
 from lightning.pytorch import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, IterableDataset
 from transformers import PreTrainedTokenizer
@@ -56,12 +53,13 @@ class TextClassificationDataModule(LightningDataModule):
 
     def prepare_data(self):
         # triggers potential downloads
-        train_batch = next(iter(self.train_dataset))
-        # TODO: check for text and label keys
+        _ = next(iter(self.train_dataset))
         _ = next(iter(self.val_dataset))
 
+        self.train_dataset = IterableTextClfDataset(self.train_dataset)
+        self.val_dataset = IterableTextClfDataset(self.val_dataset)
+
     def train_dataloader(self):
-        """training dataloader"""
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,

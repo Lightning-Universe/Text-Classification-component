@@ -1,17 +1,15 @@
 # !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 import os
-from pathlib import Path
 
 import lightning as L
 import torchtext.datasets
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClf
-from lai_textclf.data import TextClassificationDataModule
-from lai_textclf.lightning_module import TextClassification
+from lai_textclf import (TextClassification, TextClassificationDataModule,
+                         TextClf)
 
 
-class MyTextClassification(L.LightningWork):
+class MyTextClassification(TextClf):
     def get_model(self, num_labels: int):
         # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
 
@@ -30,11 +28,9 @@ class MyTextClassification(L.LightningWork):
     def get_dataset(self):
         data_root_path = os.path.expanduser("~/.cache/torchtext/YelpReview")
         train_dset = torchtext.datasets.YelpReviewFull(
-            root=os.path.join(data_root_path, "train"), split="train"
+            root=data_root_path, split="train"
         )
-        val_dset = torchtext.datasets.YelpReviewFull(
-            root=os.path.join(data_root_path, "val"), split="test"
-        )
+        val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
         num_labels = 5
         return train_dset, val_dset, num_labels
 
@@ -51,9 +47,6 @@ class MyTextClassification(L.LightningWork):
         trainer = L.Trainer(**self.get_trainer_settings())
 
         trainer.fit(pl_module, datamodule)
-
-    def run(self):
-        self.finetune()
 
 
 app = L.LightningApp(
