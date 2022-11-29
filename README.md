@@ -41,13 +41,13 @@ To run paste the following code snippet in a file `app.py`:
 
 ```python
 # !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
+import os
 
 import lightning as L
+import torchtext.datasets
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClf
-
-sample_text = "Blue is the most beautiful color!"
+from lai_textclf import TextClassification, TextClassificationData, TextClf
 
 
 class MyTextClassification(TextClf):
@@ -62,15 +62,27 @@ class MyTextClassification(TextClf):
         )
         return model, tokenizer
 
-    def get_dataset_name(self):
-        return "YelpReviewFull", 5
+    def get_dataset(self):
+        data_root_path = os.path.expanduser("~/.cache/torchtext/YelpReview")
+        train_dset = torchtext.datasets.YelpReviewFull(
+            root=data_root_path, split="train"
+        )
+        val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
+        num_labels = 5
+        return train_dset, val_dset, num_labels
 
-    def run(self):
-        super().run()
-        if self.is_main_process:
-            num_stars = self.predict(sample_text) + 1
-            print("Review text:\n", sample_text)
-            print("Predicted rating:", "★" * num_stars)
+    def get_trainer_settings(self):
+        return dict(strategy="deepspeed_stage_3_offload", precision=16)
+
+    def finetune(self):
+        train_dset, val_dset, num_labels = self.get_dataset()
+        module, tokenizer = self.get_model(num_labels)
+        pl_module = TextClassification(model=module, tokenizer=tokenizer)
+        datamodule = TextClassificationData(
+            train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
+        )
+        trainer = L.Trainer(**self.get_trainer_settings())
+        trainer.fit(pl_module, datamodule)
 
 
 app = L.LightningApp(
@@ -99,10 +111,7 @@ class MyTextClassification(TextClf):
     ...
     
     def get_trainer_settings(self):
-        settings = super().get_trainer_settings()
-
-        settings.pop('strategy')
-        return settings
+        return dict(accelerator="cpu", devices=1)
 ```
 This will avoid using the deepspeed strategy for training which is only compatible with multiple GPUs for model sharding.
 Then run the app with 
