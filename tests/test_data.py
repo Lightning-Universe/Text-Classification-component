@@ -5,8 +5,7 @@ import torch
 import torchtext.datasets
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-from lai_textclf.data import (IterableTextClfDataset,
-                              TextClassificationDataModule,
+from lai_textclf.data import (IterableTextClfDataset, TextClassificationData,
                               TextEncodingCollate)
 
 
@@ -35,9 +34,7 @@ class BoringTokenizer:
 
 
 def test_textclassification_datamodule():
-    dm = TextClassificationDataModule(
-        "IMDB", tokenizer=BoringTokenizer(), max_token_len=512
-    )
+    dm = TextClassificationData("IMDB", tokenizer=BoringTokenizer(), max_token_len=512)
 
     assert dm.dset_cls is None
     assert dm.train_dataset is None

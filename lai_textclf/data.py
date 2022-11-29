@@ -32,7 +32,7 @@ class IterableTextClfDataset(IterableDataset):
         )
 
 
-class TextClassificationDataModule(LightningDataModule):
+class TextClassificationData(LightningDataModule):
     def __init__(
         self,
         train_dataset: Dataset,

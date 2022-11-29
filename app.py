@@ -5,18 +5,13 @@ import lightning as L
 import torchtext.datasets
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import (TextClassification, TextClassificationDataModule,
-                         TextClf)
+from lai_textclf import TextClassification, TextClassificationData, TextClf
 
 
 class MyTextClassification(TextClf):
     def get_model(self, num_labels: int):
         # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
-
-        # for huggingface/transformers
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-        model_type = "bigscience/bloom-560m"
+        model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -41,11 +36,10 @@ class MyTextClassification(TextClf):
         train_dset, val_dset, num_labels = self.get_dataset()
         module, tokenizer = self.get_model(num_labels)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationDataModule(
+        datamodule = TextClassificationData(
             train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
         )
         trainer = L.Trainer(**self.get_trainer_settings())
-
         trainer.fit(pl_module, datamodule)
 
 
@@ -53,6 +47,6 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         MyTextClassification,
         num_nodes=2,
-        cloud_compute=L.CloudCompute("gpu", disk_size=50),
+        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
     )
 )
