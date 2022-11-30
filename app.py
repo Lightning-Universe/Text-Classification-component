@@ -1,8 +1,7 @@
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClassification, TextClassificationData, TextClf
-from lai_textclf.data import YelpReviewFull
+from lai_textclf import TextClassification, TextClassificationData, TextClf, YelpReviewFull
 
 
 class MyTextClassification(TextClf):

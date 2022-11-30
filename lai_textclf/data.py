@@ -1,4 +1,6 @@
 import csv
+import os
+from typing import Optional
 
 import torch
 from lightning.pytorch import LightningDataModule
@@ -30,7 +32,7 @@ class TextClassificationData(LightningDataModule):
         tokenizer: PreTrainedTokenizer,
         batch_size: int = 4,
         max_token_len: int = 256,
-        num_workers: int = 2,
+        num_workers: Optional[int] = None,
     ):
 
         super().__init__()
@@ -39,7 +41,7 @@ class TextClassificationData(LightningDataModule):
         self.batch_size = batch_size
         self.tokenizer = tokenizer
         self.max_token_len = max_token_len
-        self.num_workers = num_workers
+        self.num_workers = num_workers if num_workers is not None else os.cpu_count()
 
     def train_dataloader(self):
         return DataLoader(
