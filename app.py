@@ -1,16 +1,7 @@
-
-import os
-import shutil
-import tempfile
-import urllib.request
-
 import lightning as L
-import torchtext.datasets
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
 from lai_textclf import TextClassification, TextClassificationData, TextClf
-from torchtext.data.functional import to_map_style_dataset
-
 from lai_textclf.data import YelpReviewFull
 
 
@@ -27,13 +18,8 @@ class MyTextClassification(TextClf):
         return model, tokenizer
 
     def get_dataset(self):
-        # data_root_path = os.path.expanduser("~/.cache/torchtext")
-        with tempfile.TemporaryDirectory() as download_dir:
-            filename = download_dir / "data.tar.gz"
-            urllib.request.urlretrieve(url="https://drive.google.com/uc?export=download&id=0Bz8a_Dbh9QhbZlU4dXhHTFhZQU0", filename=filename)
-            shutil.unpack_archive(filename=filename, extract_dir=download_dir)
-            train_dset = YelpReviewFull(csv_file=download_dir/"train.csv")
-            val_dset = YelpReviewFull(csv_file=download_dir/"test.csv")
+        train_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
+        val_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
         num_labels = 5
         return train_dset, val_dset, num_labels
 
@@ -56,6 +42,13 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         MyTextClassification,
         num_nodes=2,
-        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
+        cloud_compute=L.CloudCompute(
+            "gpu-fast-multi",
+            disk_size=50,
+            mounts=L.storage.Mount(
+                source="s3://pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/",
+                mount_path="/data/Yelp",
+            ),
+        ),
     )
 )

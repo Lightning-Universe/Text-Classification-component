@@ -1,24 +1,16 @@
-import os
-import urllib.request
-from typing import Iterable, Tuple
-
-import torch
-import torchtext
-from lightning.pytorch import LightningDataModule
-from torch.utils.data import DataLoader, Dataset, IterableDataset
-from torchtext.data import to_map_style_dataset
-from transformers import PreTrainedTokenizer
-
 import csv
 
-from torch.utils.data import Dataset
+import torch
+from lightning.pytorch import LightningDataModule
+from torch.utils.data import DataLoader, Dataset
+from transformers import PreTrainedTokenizer
 
 
 class YelpReviewFull(Dataset):
     def __init__(self, csv_file: str):
         super().__init__()
-        with open(csv_file, newline='') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',')
+        with open(csv_file, newline="") as csvfile:
+            reader = csv.reader(csvfile, delimiter=",")
             self.rows = list(reader)
 
     def __len__(self):
@@ -48,9 +40,6 @@ class TextClassificationData(LightningDataModule):
         self.tokenizer = tokenizer
         self.max_token_len = max_token_len
         self.num_workers = num_workers
-
-    def prepare_data(self) -> None:
-        urllib.request.urlretrieve(...)
 
     def train_dataloader(self):
         return DataLoader(
