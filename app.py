@@ -42,7 +42,7 @@ app = L.LightningApp(
         MyTextClassification,
         num_nodes=2,
         cloud_compute=L.CloudCompute(
-            "gpu-fast-multi",
+            name="gpu-fast-multi",
             disk_size=50,
             mounts=L.storage.Mount(
                 source="s3://pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/",
