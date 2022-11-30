@@ -1,4 +1,5 @@
 import os
+import urllib.request
 from typing import Iterable, Tuple
 
 import torch
@@ -8,30 +9,25 @@ from torch.utils.data import DataLoader, Dataset, IterableDataset
 from torchtext.data import to_map_style_dataset
 from transformers import PreTrainedTokenizer
 
+import csv
 
-class IterableTextClfDataset(IterableDataset):
-    def __init__(self, dataset: Iterable[Tuple[int, str]]):
-        self.dataset = dataset
-        self.dataset_iter = None
+from torch.utils.data import Dataset
 
-    def __iter__(self):
-        self.dataset_iter = iter(self.dataset)
-        return self
 
-    def __next__(self):
-        data = next(self.dataset_iter)
+class YelpReviewFull(Dataset):
+    def __init__(self, csv_file: str):
+        super().__init__()
+        with open(csv_file, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            self.rows = list(reader)
 
-        if isinstance(data, tuple) and isinstance(data[0], (int, float)):
-            label, text, *_ = data
-        else:
-            label, text = None, data
+    def __len__(self):
+        return len(self.rows)
 
-        return dict(
-            text=text,
-            label=int(label - 1)
-            if isinstance(label, (int, float))
-            else None,  # labels need to start at 0
-        )
+    def __getitem__(self, item):
+        label, text = self.rows[item]
+        label = int(label) - 1
+        return dict(text=text, label=label)
 
 
 class TextClassificationData(LightningDataModule):
@@ -54,17 +50,7 @@ class TextClassificationData(LightningDataModule):
         self.num_workers = num_workers
 
     def prepare_data(self) -> None:
-        data_root_path = os.path.expanduser("~/.cache/torchtext")
-        train_dset = torchtext.datasets.YelpReviewFull(
-            root=data_root_path, split="train"
-        )
-        val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
-        to_map_style_dataset(train_dset)
-        to_map_style_dataset(val_dset)
-
-    def setup(self, stage=None):
-        self.train_dataset = IterableTextClfDataset(to_map_style_dataset(self.train_dataset))
-        self.val_dataset = IterableTextClfDataset(to_map_style_dataset(self.val_dataset))
+        urllib.request.urlretrieve(...)
 
     def train_dataloader(self):
         return DataLoader(
