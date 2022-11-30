@@ -41,13 +41,10 @@ To run paste the following code snippet in a file `app.py`:
 
 ```python
 # !pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
-import os
-
 import lightning as L
-import torchtext.datasets
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClassification, TextClassificationData, TextClf
+from lai_textclf import TextClassification, TextClassificationData, TextClf, YelpReviewFull
 
 
 class MyTextClassification(TextClf):
@@ -63,11 +60,8 @@ class MyTextClassification(TextClf):
         return model, tokenizer
 
     def get_dataset(self):
-        data_root_path = os.path.expanduser("~/.cache/torchtext/YelpReview")
-        train_dset = torchtext.datasets.YelpReviewFull(
-            root=data_root_path, split="train"
-        )
-        val_dset = torchtext.datasets.YelpReviewFull(root=data_root_path, split="test")
+        train_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
+        val_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
         num_labels = 5
         return train_dset, val_dset, num_labels
 
@@ -82,6 +76,7 @@ class MyTextClassification(TextClf):
             train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
         )
         trainer = L.Trainer(**self.get_trainer_settings())
+
         trainer.fit(pl_module, datamodule)
 
 
@@ -89,7 +84,14 @@ app = L.LightningApp(
     L.app.components.LightningTrainerMultiNode(
         MyTextClassification,
         num_nodes=2,
-        cloud_compute=L.CloudCompute("gpu-fast-multi", disk_size=50),
+        cloud_compute=L.CloudCompute(
+            name="gpu-fast-multi",
+            disk_size=50,
+            mounts=L.storage.Mount(
+                source="s3://pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/",
+                mount_path="/data/Yelp",
+            ),
+        ),
     )
 )
 ```
