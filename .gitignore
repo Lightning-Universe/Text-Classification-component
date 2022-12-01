@@ -8,3 +8,4 @@ lightning_logs
 *.events.out.tfevents.*
 .shared
 .idea
+dataset
