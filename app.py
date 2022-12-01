@@ -1,6 +1,9 @@
-#! sudo mkdir -p /data/yelpreviewfull && sudo chmod -R 777 /data
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -O /data/yelpreviewfull/train.csv
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -O /data/yelpreviewfull/test.csv
+#! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
+#! mkdir -p ${HOME}/data/yelpreviewfull
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -O ${HOME}/data/yelpreviewfull/train.csv
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -O ${HOME}/data/yelpreviewfull/test.csv
+import os
+
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
@@ -20,8 +23,8 @@ class MyTextClassification(TextClf):
         return model, tokenizer
 
     def get_dataset(self):
-        train_dset = YelpReviewFull(csv_file="/data/yelpreviewfull/train.csv")
-        val_dset = YelpReviewFull(csv_file="/data/yelpreviewfull/test.csv")
+        train_dset = YelpReviewFull(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv"))
+        val_dset = YelpReviewFull(csv_file=os.path.expanduser("/data/yelpreviewfull/test.csv"))
         num_labels = 5
         return train_dset, val_dset, num_labels
 
