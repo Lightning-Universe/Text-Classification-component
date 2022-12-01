@@ -1,3 +1,6 @@
+#! sudo mkdir -p /data/yelpreviewfull && sudo chmod -R 777 /data
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -O /data/yelpreviewfull/train.csv
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -O /data/yelpreviewfull/test.csv
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
@@ -17,8 +20,8 @@ class MyTextClassification(TextClf):
         return model, tokenizer
 
     def get_dataset(self):
-        train_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
-        val_dset = YelpReviewFull(csv_file="/data/Yelp/train.csv")
+        train_dset = YelpReviewFull(csv_file="/data/yelpreviewfull/train.csv")
+        val_dset = YelpReviewFull(csv_file="/data/yelpreviewfull/test.csv")
         num_labels = 5
         return train_dset, val_dset, num_labels
 
@@ -44,10 +47,6 @@ app = L.LightningApp(
         cloud_compute=L.CloudCompute(
             name="gpu-fast-multi",
             disk_size=50,
-            mounts=L.storage.Mount(
-                source="s3://pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/",
-                mount_path="/data/Yelp",
-            ),
         ),
     )
 )
