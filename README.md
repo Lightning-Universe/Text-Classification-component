@@ -66,7 +66,7 @@ class MyTextClassification(TextClf):
 
     def get_dataset(self):
         train_dset = YelpReviewFull(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv"))
-        val_dset = YelpReviewFull(csv_file=os.path.expanduser("/data/yelpreviewfull/test.csv"))
+        val_dset = YelpReviewFull(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv"))
         num_labels = 5
         return train_dset, val_dset, num_labels
 
