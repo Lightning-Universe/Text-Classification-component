@@ -1,7 +1,6 @@
-#! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
-#! mkdir -p /data/yelpreviewfull
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o /data/yelpreviewfull/train.csv
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o /data/yelpreviewfull/test.csv
+#! sudo mkdir -p /data/yelpreviewfull && sudo chmod -R 777 /data
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -O /data/yelpreviewfull/train.csv
+#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -O /data/yelpreviewfull/test.csv
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
