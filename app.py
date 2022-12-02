@@ -28,8 +28,8 @@ class MyTextClassification(TextClf):
         num_labels = 5
         return train_dset, val_dset, num_labels
 
-    def get_trainer_settings(self):
-        return dict(strategy="deepspeed_stage_3_offload", precision=16)
+    def get_trainer(self):
+        return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16)
 
     def finetune(self):
         train_dset, val_dset, num_labels = self.get_dataset()
@@ -38,7 +38,7 @@ class MyTextClassification(TextClf):
         datamodule = TextClassificationData(
             train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
         )
-        trainer = L.Trainer(**self.get_trainer_settings())
+        trainer = self.get_trainer()
 
         trainer.fit(pl_module, datamodule)
 

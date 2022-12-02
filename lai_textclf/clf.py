@@ -21,9 +21,9 @@ class TextClf(L.LightningWork, ABC):
     ) -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, int]:
         """Return the train and validation dataset for text classification and number of classification labels"""
 
-    def get_trainer_settings(self):
+    def get_trainer(self) -> L.Trainer:
         """Override this to change the Lightning Trainer default settings for finetuning."""
-        return {}
+        return L.Trainer()
 
     @abstractmethod
     def finetune(self):
