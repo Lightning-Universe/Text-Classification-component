@@ -54,7 +54,7 @@ from lai_textclf import TextClassification, TextClassificationData, TextClf, Yel
 
 class MyTextClassification(TextClf):
     def get_model(self, num_labels: int):
-        # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
+        # choose from: bloom-560m (use to test locally), bloom-1b1, bloom-1b7, bloom-3b
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
@@ -71,6 +71,7 @@ class MyTextClassification(TextClf):
         return train_dset, val_dset, num_labels
 
     def get_trainer(self):
+        # to test locally use dict(strategy="ddp", precision=16, accelerator="auto")
         return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16)
 
     def finetune(self):
