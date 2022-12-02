@@ -71,7 +71,7 @@ class MyTextClassification(TextClf):
         return train_dset, val_dset, num_labels
 
     def get_trainer(self):
-        # to test locally use dict(strategy="ddp", precision=16, accelerator="auto")
+        # to test locally use L.Trainer(strategy="ddp", precision=16, accelerator="auto")
         return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16)
 
     def finetune(self):
