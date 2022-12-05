@@ -12,13 +12,11 @@ class TextClf(L.LightningWork, ABC):
         self.drive = L.app.storage.Drive("lit://artifacts")
 
     @abstractmethod
-    def get_model(self, num_labels: int) -> Tuple[nn.Module, Any]:
+    def get_model(self) -> Tuple[nn.Module, Any]:
         """Return your large transformer language model here."""
 
     @abstractmethod
-    def get_dataset(
-        self,
-    ) -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset, int]:
+    def get_dataset(self) -> Tuple[torch.utils.data.Dataset, torch.utils.data.Dataset]:
         """Return the train and validation dataset for text classification and number of classification labels"""
 
     def get_trainer(self) -> L.Trainer:
