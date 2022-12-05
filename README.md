@@ -49,7 +49,7 @@ import os
 import lightning as L
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClassification, TextClassificationData, TextClf, YelpReviewFull
+from lai_textclf import TextClassification, TextClassificationDataModule, TextClf, YelpReviewFull
 
 
 class MyTextClassification(TextClf):
@@ -78,7 +78,7 @@ class MyTextClassification(TextClf):
         train_dset, val_dset, num_labels = self.get_dataset()
         module, tokenizer = self.get_model(num_labels)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationData(
+        datamodule = TextClassificationDataModule(
             train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
         )
         trainer = self.get_trainer()

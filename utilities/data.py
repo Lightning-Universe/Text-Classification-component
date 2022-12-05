@@ -1,4 +1,3 @@
-import csv
 import os
 from typing import Optional
 
@@ -8,7 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizer
 
 
-class TextClassificationData(LightningDataModule):
+class TextClassificationDataModule(LightningDataModule):
     def __init__(
         self,
         train_dataset: Dataset,

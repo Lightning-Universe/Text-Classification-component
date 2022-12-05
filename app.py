@@ -2,6 +2,7 @@
 #! mkdir -p ${HOME}/data/yelpreviewfull
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
+
 import csv
 import os
 
@@ -9,7 +10,7 @@ import lightning as L
 from torch.utils.data import Dataset
 from transformers import BloomForSequenceClassification, BloomTokenizerFast, AdamW
 
-from lai_textclf import TextClassificationData
+from utilities import TextClassificationDataModule, default_callbacks
 
 
 class TextDataset(Dataset):
@@ -67,13 +68,13 @@ class MyTextClassification(L.LightningWork):
         return train_dset, val_dset
 
     def get_trainer(self):
-        return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16)
+        return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
 
     def finetune(self):
         train_dset, val_dset = self.get_dataset()
         module, tokenizer = self.get_model()
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationData(
+        datamodule = TextClassificationDataModule(
             train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
         )
         trainer = self.get_trainer()
