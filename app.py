@@ -14,7 +14,7 @@ from utilities import TextClassificationDataModule, default_callbacks
 
 
 class TextDataset(Dataset):
-    def __init__(self, csv_file: str):
+    def __init__(self, csv_file):
         super().__init__()
         with open(csv_file, newline="") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
