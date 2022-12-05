@@ -6,28 +6,9 @@
 import os
 
 import lightning as L
-from transformers import BloomForSequenceClassification, BloomTokenizerFast, AdamW
+from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from utilities import default_callbacks, TextClassificationDataLoader, TextDataset
-
-
-class TextClassification(L.LightningModule):
-    def __init__(self, model, tokenizer):
-        super().__init__()
-        self.model = model
-        self.tokenizer = tokenizer
-
-    def training_step(self, batch, batch_idx):
-        output = self.model(**batch)
-        self.log("train_loss", output.loss, prog_bar=True, on_epoch=True, on_step=True)
-        return output.loss
-
-    def validation_step(self, batch, batch_idx):
-        output = self.model(**batch)
-        self.log("val_loss", output.loss, prog_bar=True)
-
-    def configure_optimizers(self):
-        return AdamW(self.parameters(), lr=0.0001)
+from utilities import default_callbacks, TextClassificationDataLoader, TextDataset, TextClassification
 
 
 class MyTextClassification(L.LightningWork):
@@ -58,10 +39,15 @@ class MyTextClassification(L.LightningWork):
     def get_trainer(self):
         return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
 
+    def finetune_step(self, model, batch):
+        output = model(**batch)
+        return output.loss
+
     def finetune(self):
         module, tokenizer = self.get_model()
         train_dataloader, val_dataloader = self.get_dataloaders(tokenizer)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
+        pl_module.shared_step = self.finetune_step
         trainer = self.get_trainer()
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 

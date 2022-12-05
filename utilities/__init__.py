@@ -1,2 +1,3 @@
 from utilities.callbacks import default_callbacks
 from utilities.data import TextDataset, TextClassificationDataLoader
+from utilities.lightning_module import TextClassification
