@@ -6,7 +6,8 @@
 import os
 
 import lightning as L
-from transformers import BloomForSequenceClassification, BloomTokenizerFast, AdamW
+from torch.optim import AdamW
+from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
 from utilities import default_callbacks, TextClassificationDataLoader, TextDataset
 
