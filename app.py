@@ -43,16 +43,13 @@ class MyTextClassification(L.LightningWork):
         output = model(**batch)
         return output.loss
 
-    def finetune(self):
+    def run(self):
         module, tokenizer = self.get_model()
         train_dataloader, val_dataloader = self.get_dataloaders(tokenizer)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
         pl_module.shared_step = self.finetune_step
         trainer = self.get_trainer()
         trainer.fit(pl_module, train_dataloader, val_dataloader)
-
-    def run(self):
-        self.finetune()
 
 
 app = L.LightningApp(
