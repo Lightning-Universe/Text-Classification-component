@@ -41,7 +41,7 @@ class TextClassification(L.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, outputs = self(**batch)
+        loss, outputs = self.model(**batch)
         self.log("val_loss", loss, prog_bar=True)
 
     def configure_optimizers(self):
