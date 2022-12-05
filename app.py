@@ -2,7 +2,6 @@
 #! mkdir -p ${HOME}/data/yelpreviewfull
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
-#! export TOKENIZERS_PARALLELISM=false
 
 import csv
 import os
@@ -37,13 +36,13 @@ class TextClassification(L.LightningModule):
         self.tokenizer = tokenizer
 
     def training_step(self, batch, batch_idx):
-        loss, outputs = self.model(**batch)
-        self.log("train_loss", loss, prog_bar=True, on_epoch=True, on_step=True)
-        return loss
+        output = self.model(**batch)
+        self.log("train_loss", output.loss, prog_bar=True, on_epoch=True, on_step=True)
+        return output.loss
 
     def validation_step(self, batch, batch_idx):
-        loss, outputs = self.model(**batch)
-        self.log("val_loss", loss, prog_bar=True)
+        output = self.model(**batch)
+        self.log("val_loss", output.loss, prog_bar=True)
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
