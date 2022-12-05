@@ -3,30 +3,12 @@
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
 
-import csv
 import os
 
 import lightning as L
-from torch.utils.data import Dataset
 from transformers import BloomForSequenceClassification, BloomTokenizerFast, AdamW
 
-from utilities import TextClassificationDataModule, default_callbacks
-
-
-class TextDataset(Dataset):
-    def __init__(self, csv_file):
-        super().__init__()
-        with open(csv_file, newline="") as csvfile:
-            reader = csv.reader(csvfile, delimiter=",")
-            self.rows = list(reader)
-
-    def __len__(self):
-        return len(self.rows)
-
-    def __getitem__(self, item):
-        label, text = self.rows[item]
-        label = int(label) - 1
-        return dict(text=text, label=label)
+from utilities import default_callbacks, TextClassificationDataLoader, TextDataset
 
 
 class TextClassification(L.LightningModule):
@@ -62,23 +44,26 @@ class MyTextClassification(L.LightningWork):
         )
         return model, tokenizer
 
-    def get_dataset(self):
-        train_dset = TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv"))
-        val_dset = TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv"))
-        return train_dset, val_dset
+    def get_dataloaders(self, tokenizer):
+        train_dataloader = TextClassificationDataLoader(
+            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")),
+            tokenizer=tokenizer,
+        )
+        val_dataloader = TextClassificationDataLoader(
+            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")),
+            tokenizer=tokenizer
+        )
+        return train_dataloader, val_dataloader
 
     def get_trainer(self):
         return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
 
     def finetune(self):
-        train_dset, val_dset = self.get_dataset()
         module, tokenizer = self.get_model()
+        train_dataloader, val_dataloader = self.get_dataloaders(tokenizer)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationDataModule(
-            train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
-        )
         trainer = self.get_trainer()
-        trainer.fit(pl_module, datamodule)
+        trainer.fit(pl_module, train_dataloader, val_dataloader)
 
     def run(self):
         self.finetune()

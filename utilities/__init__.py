@@ -1,2 +1,2 @@
 from utilities.callbacks import default_callbacks
-from utilities.data import TextClassificationDataModule
+from utilities.data import TextDataset, TextClassificationDataLoader
