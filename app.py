@@ -58,15 +58,12 @@ class MyTextClassification(L.LightningWork):
     def get_trainer(self):
         return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
 
-    def finetune(self):
+    def run(self):
         module, tokenizer = self.get_model()
         train_dataloader, val_dataloader = self.get_dataloaders(tokenizer)
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
         trainer = self.get_trainer()
         trainer.fit(pl_module, train_dataloader, val_dataloader)
-
-    def run(self):
-        self.finetune()
 
 
 app = L.LightningApp(
