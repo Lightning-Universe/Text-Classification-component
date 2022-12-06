@@ -122,7 +122,7 @@ app = L.LightningApp(
 
 ```
 
-### Running on cloud
+### Running on the cloud
 
 ```bash
 lightning run app app.py --cloud
@@ -132,16 +132,15 @@ Don't want to use the public cloud? Contact us at `product@lightning.ai` for ear
 
 
 ### Running locally (limited)
-This example is optimized for the cloud. To run it locally, choose a smaller model, change the trainer settings like so:
+This example is optimized for the cloud. To run it locally on your laptop, choose a smaller model, and change the trainer settings like so:
 
 ```python
-class MyTextClassification(TextClf):
-    ...
-    
-    def get_trainer(self):
-        return dict(accelerator="cpu", devices=1)
+class MyTextClassification(L.LightningWork):
+    def run(self):
+        ...
+        trainer = L.Trainer(accelerator="cpu", devices=1, ...)
+        ...
 ```
-This will avoid using the deepspeed strategy for training which is only compatible with multiple GPUs for model sharding.
 Then run the app with 
 
 ```bash
