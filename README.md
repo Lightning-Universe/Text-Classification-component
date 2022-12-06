@@ -42,48 +42,71 @@ To run paste the following code snippet in a file `app.py`:
 ```python
 #! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 #! mkdir -p ${HOME}/data/yelpreviewfull
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -O ${HOME}/data/yelpreviewfull/train.csv
-#! wget https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -O ${HOME}/data/yelpreviewfull/test.csv
+#! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
+#! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
+
 import os
 
 import lightning as L
+from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import TextClassification, TextClassificationData, TextClf, YelpReviewFull
+from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset
 
 
-class MyTextClassification(TextClf):
-    def get_model(self, num_labels: int):
-        # choose from: bloom-560m (use to test locally), bloom-1b1, bloom-1b7, bloom-3b
+class TextClassification(L.LightningModule):
+    def __init__(self, model, tokenizer):
+        super().__init__()
+        self.model = model
+        self.tokenizer = tokenizer
+
+    def training_step(self, batch, batch_idx):
+        output = self.model(**batch)
+        self.log("train_loss", output.loss, prog_bar=True, on_epoch=True, on_step=True)
+        return output.loss
+
+    def validation_step(self, batch, batch_idx):
+        output = self.model(**batch)
+        self.log("val_loss", output.loss, prog_bar=True)
+
+    def configure_optimizers(self):
+        return AdamW(self.parameters(), lr=0.0001)
+
+
+class MyTextClassification(L.LightningWork):
+    def run(self):
+        # --------------------
+        # CONFIGURE YOUR MODEL
+        # --------------------
+        # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
-        model = BloomForSequenceClassification.from_pretrained(
-            model_type, num_labels=num_labels, ignore_mismatched_sizes=True
+        module = BloomForSequenceClassification.from_pretrained(
+            model_type, num_labels=5, ignore_mismatched_sizes=True
         )
-        return model, tokenizer
 
-    def get_dataset(self):
-        train_dset = YelpReviewFull(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv"))
-        val_dset = YelpReviewFull(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv"))
-        num_labels = 5
-        return train_dset, val_dset, num_labels
+        # -------------------
+        # CONFIGURE YOUR DATA
+        # -------------------
+        train_dataloader = TextClassificationDataLoader(
+            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")),
+            tokenizer=tokenizer,
+        )
+        val_dataloader = TextClassificationDataLoader(
+            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")),
+            tokenizer=tokenizer
+        )
 
-    def get_trainer(self):
-        # to test locally use L.Trainer(strategy="ddp", precision=16, accelerator="auto")
-        return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16)
-
-    def finetune(self):
-        train_dset, val_dset, num_labels = self.get_dataset()
-        module, tokenizer = self.get_model(num_labels)
+        # -------------------
+        # RUN YOUR FINETUNING
+        # -------------------
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        datamodule = TextClassificationData(
-            train_dataset=train_dset, val_dataset=val_dset, tokenizer=tokenizer
+        trainer = L.Trainer(
+            max_steps=100, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks()
         )
-        trainer = self.get_trainer()
-
-        trainer.fit(pl_module, datamodule)
+        trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
 app = L.LightningApp(
@@ -96,7 +119,6 @@ app = L.LightningApp(
         ),
     )
 )
-
 
 ```
 
