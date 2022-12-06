@@ -36,12 +36,12 @@ class TextClassificationDataLoader(DataLoader):
         self.tokenizer = tokenizer
         self.max_token_len = max_token_len
         collate_fn = TextEncodingCollate(tokenizer, max_token_len)
+        kwargs.setdefault("collate_fn", collate_fn)
         num_workers = num_workers if num_workers is not None else os.cpu_count()
         super().__init__(
             dataset,
             batch_size=batch_size,
             num_workers=num_workers,
-            collate_fn=collate_fn,
             **kwargs
         )
 
