@@ -32,20 +32,23 @@ class TextClassification(L.LightningModule):
 
 
 class MyTextClassification(L.LightningWork):
-    num_classes = 5
 
-    def get_model(self):
-        # choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
+    def run(self):
+        # --------------------
+        # CONFIGURE YOUR MODEL
+        # --------------------
+        # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
-        model = BloomForSequenceClassification.from_pretrained(
-            model_type, num_labels=self.num_classes, ignore_mismatched_sizes=True
+        module = BloomForSequenceClassification.from_pretrained(
+            model_type, num_labels=5, ignore_mismatched_sizes=True
         )
-        return model, tokenizer
 
-    def get_dataloaders(self, tokenizer):
+        # -------------------
+        # CONFIGURE YOUR DATA
+        # -------------------
         train_dataloader = TextClassificationDataLoader(
             dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")),
             tokenizer=tokenizer,
@@ -54,16 +57,12 @@ class MyTextClassification(L.LightningWork):
             dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")),
             tokenizer=tokenizer
         )
-        return train_dataloader, val_dataloader
 
-    def get_trainer(self):
-        return L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
-
-    def run(self):
-        module, tokenizer = self.get_model()
-        train_dataloader, val_dataloader = self.get_dataloaders(tokenizer)
+        # -------------------
+        # RUN YOUR FINETUNING
+        # -------------------
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
-        trainer = self.get_trainer()
+        trainer = L.Trainer(strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks())
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
