@@ -32,7 +32,6 @@ class TextClassification(L.LightningModule):
 
 
 class MyTextClassification(L.LightningWork):
-
     def run(self):
         # --------------------
         # CONFIGURE YOUR MODEL
