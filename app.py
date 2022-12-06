@@ -9,7 +9,7 @@ import lightning as L
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from utilities import default_callbacks, TextClassificationDataLoader, TextDataset
+from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset
 
 
 class TextClassification(L.LightningModule):
