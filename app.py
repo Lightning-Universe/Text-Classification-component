@@ -69,8 +69,8 @@ class MyTextClassification(L.LightningWork):
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
 
         trainer = L.Trainer(
-            max_steps=100, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks(),
-            logger=get_logger(drive=self.tensorboard_drive)
+            max_steps=10000, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks(),
+            logger=get_logger(save_dir=".", drive=self.tensorboard_drive)
         )
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 

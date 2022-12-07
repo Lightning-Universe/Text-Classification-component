@@ -3,28 +3,17 @@ from subprocess import Popen
 from uuid import uuid4
 
 import lightning as L
-from tensorboard import program
 import concurrent.futures
 import os
 from pathlib import Path
 from time import time
-from typing import Optional
+from typing import Dict, List, Optional
 
 
 from fsspec.implementations.local import LocalFileSystem
 from lightning.app.storage import Drive
 from lightning.app.storage.path import _filesystem
 from lightning.pytorch.utilities.rank_zero import rank_zero_only
-
-
-
-def launch_tensorboard(log_path):
-    if os.getenv("GLOBAL_RANK", "0") != "0":
-        return
-    tb = program.TensorBoard()
-    tb.configure(argv=[None, '--logdir', log_path])
-    url = tb.launch()
-    print(f"Tensorflow listening on {url}")
 
 
 class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
@@ -86,18 +75,15 @@ def get_logger(*args, drive: Drive, refresh_time: int = 5, **kwargs):
         logger = L.pytorch.loggers.TensorBoardLogger(*args, **kwargs)
     return logger
 
-
 class TensorBoardWork(L.app.LightningWork):
     def __init__(self, *args, drive: Drive, **kwargs):
-        super().__init__(*args, parallel=True, **kwargs)
+        super().__init__(*args, parallel=True, cloud_build_config=L.BuildConfig(requirements=['tensorboard']), **kwargs)
 
         self.drive = drive
 
     def run(self):
-        if not self.url:
-            return
 
-        use_localhost = "LIGHTNING_APP_STATE_URL" not in os.environ
+        use_localhost = not L.app.utilities.cloud.is_running_in_cloud()
 
         local_folder = f"./tensorboard_logs/{uuid4()}"
 
@@ -106,7 +92,7 @@ class TensorBoardWork(L.app.LightningWork):
         # Note: Used tensorboard built-in sync methods but it doesn't seem to work.
         cmd = f"tensorboard --logdir={local_folder} --host {self.host} --port {self.port}"
         self._process = Popen(cmd, shell=True, env=os.environ)
-        print(f'Running Tensorboard on {self.url}:{self.port}')
+        print(f'Running Tensorboard on {self.host}:{self.port}')
 
         fs = _filesystem()
         root_folder = str(self.drive.drive_root)
@@ -138,3 +124,6 @@ class TensorBoardWrapperFlow(L.LightningFlow):
     def run(self, *args, **kwargs) -> None:
         self.tensorboard_work.run()
         self.orig_flow.run(*args, **kwargs)
+
+    def configure_layout(self) -> List[Dict[str, str]]:
+        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
