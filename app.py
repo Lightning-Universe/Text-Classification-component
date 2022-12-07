@@ -6,10 +6,11 @@
 import os
 
 import lightning as L
+from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset
+from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset, get_logger, TensorBoardWrapperFlow
 
 
 class TextClassification(L.LightningModule):
@@ -32,12 +33,17 @@ class TextClassification(L.LightningModule):
 
 
 class MyTextClassification(L.LightningWork):
+
+    def __init__(self, *args, tb_drive, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tensorboard_drive = tb_drive
+
     def run(self):
         # --------------------
         # CONFIGURE YOUR MODEL
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
-        model_type = "bigscience/bloom-3b"
+        model_type = "bigscience/bloom-560m"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -61,19 +67,26 @@ class MyTextClassification(L.LightningWork):
         # RUN YOUR FINETUNING
         # -------------------
         pl_module = TextClassification(model=module, tokenizer=tokenizer)
+
         trainer = L.Trainer(
-            max_steps=100, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks()
+            max_steps=100, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks(),
+            logger=get_logger(drive=self.tensorboard_drive)
         )
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
+tb_drive = Drive("lit://tb_drive")
 app = L.LightningApp(
-    L.app.components.LightningTrainerMultiNode(
-        MyTextClassification,
-        num_nodes=2,
-        cloud_compute=L.CloudCompute(
-            name="gpu-fast-multi",
-            disk_size=50,
-        ),
+    TensorBoardWrapperFlow(
+        tb_drive,
+        L.app.components.LightningTrainerMultiNode(
+            MyTextClassification,
+            num_nodes=1,
+            cloud_compute=L.CloudCompute(
+                name="gpu-fast-multi",
+                disk_size=50,
+            ),
+            tb_drive=tb_drive
+        )
     )
 )
