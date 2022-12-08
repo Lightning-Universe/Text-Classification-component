@@ -5,8 +5,11 @@ import torch
 import torchtext.datasets
 from torch.utils.data.datapipes.datapipe import IterDataPipe
 
-from lai_textclf.data import (IterableTextClfDataset, TextClassificationData,
-                              TextEncodingCollate)
+from lai_textclf.data import (
+    IterableTextClfDataset,
+    TextClassificationData,
+    TextEncodingCollate,
+)
 
 
 def test_iterable_text_clf_dataset():

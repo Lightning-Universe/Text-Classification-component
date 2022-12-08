@@ -38,7 +38,9 @@ class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
         fs.invalidate_cache()
 
         source_path = Path(self.log_dir).resolve()
-        destination_path = self.drive._to_shared_path(self.log_dir, component_name=self.drive.component_name)
+        destination_path = self.drive._to_shared_path(
+            self.log_dir, component_name=self.drive.component_name
+        )
 
         def _copy(from_path: Path, to_path: Path) -> Optional[Exception]:
 
@@ -68,9 +70,15 @@ class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
         if exception:
             raise exception
 
+
 class TensorBoardWork(L.app.LightningWork):
     def __init__(self, *args, drive: Drive, **kwargs):
-        super().__init__(*args, parallel=True, cloud_build_config=L.BuildConfig(requirements=['tensorboard']), **kwargs)
+        super().__init__(
+            *args,
+            parallel=True,
+            cloud_build_config=L.BuildConfig(requirements=["tensorboard"]),
+            **kwargs,
+        )
 
         self.drive = drive
 
@@ -83,9 +91,11 @@ class TensorBoardWork(L.app.LightningWork):
         os.makedirs(local_folder, exist_ok=True)
 
         # Note: Used tensorboard built-in sync methods but it doesn't seem to work.
-        cmd = f"tensorboard --logdir={local_folder} --host {self.host} --port {self.port}"
+        cmd = (
+            f"tensorboard --logdir={local_folder} --host {self.host} --port {self.port}"
+        )
         self._process = Popen(cmd, shell=True, env=os.environ)
-        print(f'Running Tensorboard on {self.host}:{self.port}')
+        print(f"Running Tensorboard on {self.host}:{self.port}")
 
         fs = _filesystem()
         root_folder = str(self.drive.drive_root)
@@ -97,7 +107,9 @@ class TensorBoardWork(L.app.LightningWork):
                     if "events.out.tfevents" not in filepath:
                         continue
                     source_path = os.path.join(dir, filepath)
-                    target_path = os.path.join(dir, filepath).replace(root_folder, local_folder)
+                    target_path = os.path.join(dir, filepath).replace(
+                        root_folder, local_folder
+                    )
                     if use_localhost:
                         parent = Path(target_path).resolve().parent
                         if not parent.exists():
@@ -107,6 +119,7 @@ class TensorBoardWork(L.app.LightningWork):
     def on_exit(self):
         assert self._process
         self._process.kill()
+
 
 class TensorBoardWrapperFlow(L.LightningFlow):
     def __init__(self, tb_drive: Drive, orig_flow: L.LightningFlow, **tbw_kwargs):

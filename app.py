@@ -11,7 +11,16 @@ from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset, DriveTensorBoardLogger, TensorBoardWrapperFlow, get_default_clf_metrics, warn_if_drive_not_empty, warn_if_local
+from lai_textclf import (
+    default_callbacks,
+    TextClassificationDataLoader,
+    TextDataset,
+    DriveTensorBoardLogger,
+    TensorBoardWrapperFlow,
+    get_default_clf_metrics,
+    warn_if_drive_not_empty,
+    warn_if_local,
+)
 
 
 class TextClassification(L.LightningModule):
@@ -27,14 +36,14 @@ class TextClassification(L.LightningModule):
     def training_step(self, batch, batch_idx):
         output = self.model(**batch)
         self.log("train_loss", output.loss, prog_bar=True, on_epoch=True, on_step=True)
-        self.train_metrics(output.logits, batch['labels'])
+        self.train_metrics(output.logits, batch["labels"])
         self.log_dict(self.train_metrics, on_epoch=True, on_step=True)
         return output.loss
 
     def validation_step(self, batch, batch_idx):
         output = self.model(**batch)
         self.log("val_loss", output.loss, prog_bar=True)
-        self.val_metrics(output.logits, batch['labels'])
+        self.val_metrics(output.logits, batch["labels"])
         self.log_dict(self.val_metrics)
 
     def configure_optimizers(self):
@@ -42,7 +51,6 @@ class TextClassification(L.LightningModule):
 
 
 class MyTextClassification(L.LightningWork):
-
     def __init__(self, *args, tb_drive, **kwargs):
         super().__init__(*args, **kwargs)
         self.tensorboard_drive = tb_drive
@@ -55,7 +63,7 @@ class MyTextClassification(L.LightningWork):
         # CONFIGURE YOUR MODEL
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
-        model_type = "bigscience/bloom-560m"
+        model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -67,22 +75,33 @@ class MyTextClassification(L.LightningWork):
         # CONFIGURE YOUR DATA
         # -------------------
         train_dataloader = TextClassificationDataLoader(
-            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")),
+            dataset=TextDataset(
+                csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")
+            ),
             tokenizer=tokenizer,
         )
         val_dataloader = TextClassificationDataLoader(
-            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")),
-            tokenizer=tokenizer
+            dataset=TextDataset(
+                csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")
+            ),
+            tokenizer=tokenizer,
         )
 
         # -------------------
         # RUN YOUR FINETUNING
         # -------------------
-        pl_module = TextClassification(model=module, tokenizer=tokenizer, metrics=get_default_clf_metrics(5))
+        pl_module = TextClassification(
+            model=module, tokenizer=tokenizer, metrics=get_default_clf_metrics(5)
+        )
 
         trainer = L.Trainer(
-            max_steps=10000, strategy="ddp", precision=16, callbacks=default_callbacks(),
-            logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive)
+            max_epochs=1,
+            limit_train_batches=10000,
+            limit_val_batches=10000,
+            strategy="ddp",
+            precision=16,
+            callbacks=default_callbacks(),
+            logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
         )
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
@@ -93,12 +112,12 @@ app = L.LightningApp(
         tb_drive,
         L.app.components.LightningTrainerMultiNode(
             MyTextClassification,
-            num_nodes=1,
+            num_nodes=2,
             cloud_compute=L.CloudCompute(
                 name="gpu-fast-multi",
                 disk_size=50,
             ),
-            tb_drive=tb_drive
-        )
+            tb_drive=tb_drive,
+        ),
     )
 )
