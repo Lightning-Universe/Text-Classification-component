@@ -124,12 +124,12 @@ class TensorBoardWork(L.app.LightningWork):
 class TensorBoardWrapperFlow(L.LightningFlow):
     def __init__(self, tb_drive: Drive, orig_flow: L.LightningFlow, **tbw_kwargs):
         super().__init__()
-        self.tensorboard_work = TensorBoardWork(drive=tb_drive, **tbw_kwargs)
+        # self.tensorboard_work = TensorBoardWork(drive=tb_drive, **tbw_kwargs)
         self.orig_flow = orig_flow
 
     def run(self, *args, **kwargs) -> None:
-        self.tensorboard_work.run()
         self.orig_flow.run(*args, **kwargs)
+        # self.tensorboard_work.run()
 
-    def configure_layout(self) -> List[Dict[str, str]]:
-        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
+    # def configure_layout(self) -> List[Dict[str, str]]:
+    #     return [{"name": "Training Logs", "content": self.tensorboard_work.url}]

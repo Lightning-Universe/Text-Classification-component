@@ -107,17 +107,29 @@ class MyTextClassification(L.LightningWork):
 
 
 tb_drive = Drive("lit://tb_drive")
+# app = L.LightningApp(
+#     TensorBoardWrapperFlow(
+#         tb_drive,
+#         L.app.components.LightningTrainerMultiNode(
+#             MyTextClassification,
+#             num_nodes=2,
+#             cloud_compute=L.CloudCompute(
+#                 name="gpu-fast-multi",
+#                 disk_size=50,
+#             ),
+#             tb_drive=tb_drive,
+#         ),
+#     )
+# )
 app = L.LightningApp(
-    TensorBoardWrapperFlow(
-        tb_drive,
-        L.app.components.LightningTrainerMultiNode(
-            MyTextClassification,
-            num_nodes=2,
-            cloud_compute=L.CloudCompute(
-                name="gpu-fast-multi",
-                disk_size=50,
-            ),
-            tb_drive=tb_drive,
+    L.app.components.LightningTrainerMultiNode(
+        MyTextClassification,
+        num_nodes=2,
+        cloud_compute=L.CloudCompute(
+            name="gpu-fast-multi",
+            disk_size=50,
         ),
+        tb_drive=tb_drive
     )
 )
+
