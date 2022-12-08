@@ -68,13 +68,6 @@ class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
         if exception:
             raise exception
 
-def get_logger(*args, drive: Drive, refresh_time: int = 5, **kwargs):
-    if L.app.utilities.cloud.is_running_in_cloud():
-        logger = DriveTensorBoardLogger(*args, drive=drive, refresh_time=refresh_time, **kwargs)
-    else:
-        logger = L.pytorch.loggers.TensorBoardLogger(*args, **kwargs)
-    return logger
-
 class TensorBoardWork(L.app.LightningWork):
     def __init__(self, *args, drive: Drive, **kwargs):
         super().__init__(*args, parallel=True, cloud_build_config=L.BuildConfig(requirements=['tensorboard']), **kwargs)
