@@ -64,7 +64,7 @@ class MyTextClassification(L.LightningWork):
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         # For local runs: Choose a small model (i.e. bloom-560m)
-        model_type = "bigscience/bloom-560m"
+        model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
