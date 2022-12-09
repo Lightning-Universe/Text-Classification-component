@@ -16,10 +16,10 @@ from lai_textclf import (
     TextClassificationDataLoader,
     TextDataset,
     DriveTensorBoardLogger,
-    TensorBoardWrapperFlow,
     get_default_clf_metrics,
     warn_if_drive_not_empty,
     warn_if_local,
+    TensorBoardWork
 )
 
 
@@ -108,11 +108,12 @@ class MyTextClassification(L.LightningWork):
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
-tb_drive = Drive("lit://tb_drive")
-app = L.LightningApp(
-    TensorBoardWrapperFlow(
-        tb_drive,
-        L.app.components.LightningTrainerMultiNode(
+class Main(L.LightningFlow):
+    def __init__(self):
+        super().__init__()
+        tb_drive = Drive("lit://tb_drive")
+        self.tensorboard_work = TensorBoardWork(drive=tb_drive)
+        self.text_classificaion = L.app.components.LightningTrainerMultiNode(
             MyTextClassification,
             num_nodes=2,
             cloud_compute=L.CloudCompute(
@@ -120,8 +121,14 @@ app = L.LightningApp(
                 disk_size=50,
             ),
             tb_drive=tb_drive,
-        ),
-    )
-)
+        )
+
+    def run(self, *args, **kwargs) -> None:
+        self.tensorboard_work.run()
+        self.text_classificaion.run()
+
+    def configure_layout(self):
+        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
 
 
+app = L.LightningApp(Main())

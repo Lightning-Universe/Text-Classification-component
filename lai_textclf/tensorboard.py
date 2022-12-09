@@ -1,4 +1,3 @@
-import os
 from subprocess import Popen
 from uuid import uuid4
 
@@ -7,7 +6,7 @@ import concurrent.futures
 import os
 from pathlib import Path
 from time import time
-from typing import Dict, List, Optional
+from typing import Optional
 
 
 from fsspec.implementations.local import LocalFileSystem
@@ -121,17 +120,3 @@ class TensorBoardWork(L.app.LightningWork):
     def on_exit(self):
         assert self._process
         self._process.kill()
-
-
-class TensorBoardWrapperFlow(L.LightningFlow):
-    def __init__(self, tb_drive: Drive, orig_flow: L.LightningFlow, **tbw_kwargs):
-        super().__init__()
-        self.tensorboard_work = TensorBoardWork(drive=tb_drive, **tbw_kwargs)
-        self.orig_flow = orig_flow
-
-    def run(self, *args, **kwargs) -> None:
-        self.tensorboard_work.run()
-        self.orig_flow.run(*args, **kwargs)
-
-    def configure_layout(self) -> List[Dict[str, str]]:
-        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
