@@ -104,6 +104,7 @@ class MyTextClassification(L.LightningWork):
             precision=16,
             callbacks=default_callbacks(),
             logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
+            log_every_n_steps=5,
         )
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
