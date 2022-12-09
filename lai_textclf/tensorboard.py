@@ -98,6 +98,8 @@ class TensorBoardWork(L.app.LightningWork):
         )
 
         if not is_running_in_cloud():
+            # installs tensorboard ONLY in the process it needs to be in
+            # necessary because local build configs are not yet supported
             cmd = (
                 "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 "
                 + sys.executable
