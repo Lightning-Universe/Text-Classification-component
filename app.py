@@ -64,7 +64,7 @@ class MyTextClassification(L.LightningWork):
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
         # For local runs: Choose a small model (i.e. bloom-560m)
-        model_type = "bigscience/bloom-3b"
+        model_type = "bigscience/bloom-560m"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -97,10 +97,10 @@ class MyTextClassification(L.LightningWork):
 
         # For local runs without multiple gpus, change strategy to "ddp"
         trainer = L.Trainer(
-            max_epochs=1,
-            limit_train_batches=10000,
-            limit_val_batches=10000,
-            strategy="deepspeed_stage_3_offload",
+            max_epochs=2,
+            limit_train_batches=100,
+            limit_val_batches=100,
+            strategy="ddp",
             precision=16,
             callbacks=default_callbacks(),
             logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
