@@ -100,7 +100,7 @@ class MyTextClassification(L.LightningWork):
             max_epochs=2,
             limit_train_batches=100,
             limit_val_batches=100,
-            strategy="ddp",
+            strategy="deepspeed_stage_3_offload",
             precision=16,
             callbacks=default_callbacks(),
             logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
