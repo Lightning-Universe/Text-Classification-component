@@ -40,45 +40,73 @@ To run paste the following code snippet in a file `app.py`:
 
 
 ```python
+
 #! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 #! mkdir -p ${HOME}/data/yelpreviewfull
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
 
 import os
+from copy import deepcopy
 
 import lightning as L
+from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import default_callbacks, TextClassificationDataLoader, TextDataset
+from lai_textclf import (
+    default_callbacks,
+    TextClassificationDataLoader,
+    TextDataset,
+    DriveTensorBoardLogger,
+    get_default_clf_metrics,
+    warn_if_drive_not_empty,
+    warn_if_local,
+    TensorBoardWork
+)
 
 
 class TextClassification(L.LightningModule):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, metrics=None):
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
+        if metrics is None:
+            metrics = {}
+        self.train_metrics = deepcopy(metrics)
+        self.val_metrics = deepcopy(metrics)
 
     def training_step(self, batch, batch_idx):
         output = self.model(**batch)
         self.log("train_loss", output.loss, prog_bar=True, on_epoch=True, on_step=True)
+        self.train_metrics(output.logits, batch["labels"])
+        self.log_dict(self.train_metrics, on_epoch=True, on_step=True)
         return output.loss
 
     def validation_step(self, batch, batch_idx):
         output = self.model(**batch)
         self.log("val_loss", output.loss, prog_bar=True)
+        self.val_metrics(output.logits, batch["labels"])
+        self.log_dict(self.val_metrics)
 
     def configure_optimizers(self):
         return AdamW(self.parameters(), lr=0.0001)
 
 
 class MyTextClassification(L.LightningWork):
+    def __init__(self, *args, tb_drive, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tensorboard_drive = tb_drive
+
     def run(self):
+        warn_if_drive_not_empty(self.tensorboard_drive)
+        warn_if_local()
+
         # --------------------
         # CONFIGURE YOUR MODEL
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
+        # For local runs: Choose a small model (i.e. bloom-560m)
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
@@ -91,34 +119,63 @@ class MyTextClassification(L.LightningWork):
         # CONFIGURE YOUR DATA
         # -------------------
         train_dataloader = TextClassificationDataLoader(
-            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")),
+            dataset=TextDataset(
+                csv_file=os.path.expanduser("~/data/yelpreviewfull/train.csv")
+            ),
             tokenizer=tokenizer,
         )
         val_dataloader = TextClassificationDataLoader(
-            dataset=TextDataset(csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")),
-            tokenizer=tokenizer
+            dataset=TextDataset(
+                csv_file=os.path.expanduser("~/data/yelpreviewfull/test.csv")
+            ),
+            tokenizer=tokenizer,
         )
 
         # -------------------
         # RUN YOUR FINETUNING
         # -------------------
-        pl_module = TextClassification(model=module, tokenizer=tokenizer)
+        pl_module = TextClassification(
+            model=module, tokenizer=tokenizer, metrics=get_default_clf_metrics(5)
+        )
+
+        # For local runs without multiple gpus, change strategy to "ddp"
         trainer = L.Trainer(
-            max_steps=100, strategy="deepspeed_stage_3_offload", precision=16, callbacks=default_callbacks()
+            max_epochs=2,
+            limit_train_batches=100,
+            limit_val_batches=100,
+            strategy="deepspeed_stage_3_offload",
+            precision=16,
+            callbacks=default_callbacks(),
+            logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
+            log_every_n_steps=5,
         )
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
-app = L.LightningApp(
-    L.app.components.LightningTrainerMultiNode(
-        MyTextClassification,
-        num_nodes=2,
-        cloud_compute=L.CloudCompute(
-            name="gpu-fast-multi",
-            disk_size=50,
-        ),
-    )
-)
+class Main(L.LightningFlow):
+    def __init__(self):
+        super().__init__()
+        tb_drive = Drive("lit://tb_drive")
+        self.tensorboard_work = TensorBoardWork(drive=tb_drive)
+        self.text_classificaion = L.app.components.LightningTrainerMultiNode(
+            MyTextClassification,
+            num_nodes=2,
+            cloud_compute=L.CloudCompute(
+                name="gpu-fast-multi",
+                disk_size=50,
+            ),
+            tb_drive=tb_drive,
+        )
+
+    def run(self, *args, **kwargs) -> None:
+        self.tensorboard_work.run()
+        self.text_classificaion.run()
+
+    def configure_layout(self):
+        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
+
+
+app = L.LightningApp(Main())
 
 ```
 
@@ -138,7 +195,7 @@ This example is optimized for the cloud. To run it locally on your laptop, choos
 class MyTextClassification(L.LightningWork):
     def run(self):
         ...
-        trainer = L.Trainer(accelerator="cpu", devices=1, ...)
+        trainer = L.Trainer(accelerator="ddp")
         ...
 ```
 Then run the app with 

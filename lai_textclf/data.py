@@ -39,10 +39,7 @@ class TextClassificationDataLoader(DataLoader):
         kwargs.setdefault("collate_fn", collate_fn)
         num_workers = num_workers if num_workers is not None else os.cpu_count()
         super().__init__(
-            dataset,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            **kwargs
+            dataset, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
 
