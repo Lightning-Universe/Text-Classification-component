@@ -86,7 +86,7 @@ class TensorBoardWork(L.app.LightningWork):
 
     def run(self):
 
-        use_localhost = not L.app.utilities.cloud.is_running_in_cloud()
+        use_localhost = not is_running_in_cloud()
 
         local_folder = f"./tensorboard_logs/{uuid4()}"
 
@@ -97,7 +97,7 @@ class TensorBoardWork(L.app.LightningWork):
             f"tensorboard --logdir={local_folder} --host {self.host} --port {self.port}"
         )
 
-        if not is_running_in_cloud():
+        if use_localhost:
             # installs tensorboard ONLY in the process it needs to be in
             # necessary because local build configs are not yet supported
             cmd = (
