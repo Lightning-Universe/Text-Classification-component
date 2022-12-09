@@ -1,3 +1,5 @@
+import os
+import sys
 from subprocess import Popen
 from uuid import uuid4
 
@@ -13,6 +15,7 @@ from fsspec.implementations.local import LocalFileSystem
 from lightning.app.storage import Drive
 from lightning.app.storage.path import _filesystem
 from lightning.pytorch.utilities.rank_zero import rank_zero_only
+from lightning.app.utilities.cloud import is_running_in_cloud
 
 
 class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
@@ -95,6 +98,15 @@ class TensorBoardWork(L.app.LightningWork):
         cmd = (
             f"tensorboard --logdir={local_folder} --host {self.host} --port {self.port}"
         )
+
+        if not is_running_in_cloud():
+            cmd = (
+                "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1 "
+                + sys.executable
+                + " -m pip install tensorboard && "
+                + cmd
+            )
+
         self._process = Popen(cmd, shell=True, env=os.environ)
         print(f"Running Tensorboard on {self.host}:{self.port}")
 
