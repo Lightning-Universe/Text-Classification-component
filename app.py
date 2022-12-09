@@ -63,6 +63,7 @@ class MyTextClassification(L.LightningWork):
         # CONFIGURE YOUR MODEL
         # --------------------
         # Choose from: bloom-560m, bloom-1b1, bloom-1b7, bloom-3b
+        # For local runs: Choose a small model (i.e. bloom-560m)
         model_type = "bigscience/bloom-3b"
         tokenizer = BloomTokenizerFast.from_pretrained(model_type)
         tokenizer.pad_token = tokenizer.eos_token
@@ -94,11 +95,12 @@ class MyTextClassification(L.LightningWork):
             model=module, tokenizer=tokenizer, metrics=get_default_clf_metrics(5)
         )
 
+        # For local runs without multiple gpus, change strategy to "ddp"
         trainer = L.Trainer(
             max_epochs=1,
             limit_train_batches=10000,
             limit_val_batches=10000,
-            strategy="ddp",
+            strategy="deepspeed_stage_3_offload",
             precision=16,
             callbacks=default_callbacks(),
             logger=DriveTensorBoardLogger(save_dir=".", drive=self.tensorboard_drive),
@@ -107,29 +109,19 @@ class MyTextClassification(L.LightningWork):
 
 
 tb_drive = Drive("lit://tb_drive")
-# app = L.LightningApp(
-#     TensorBoardWrapperFlow(
-#         tb_drive,
-#         L.app.components.LightningTrainerMultiNode(
-#             MyTextClassification,
-#             num_nodes=2,
-#             cloud_compute=L.CloudCompute(
-#                 name="gpu-fast-multi",
-#                 disk_size=50,
-#             ),
-#             tb_drive=tb_drive,
-#         ),
-#     )
-# )
 app = L.LightningApp(
-    L.app.components.LightningTrainerMultiNode(
-        MyTextClassification,
-        num_nodes=2,
-        cloud_compute=L.CloudCompute(
-            name="gpu-fast-multi",
-            disk_size=50,
+    TensorBoardWrapperFlow(
+        tb_drive,
+        L.app.components.LightningTrainerMultiNode(
+            MyTextClassification,
+            num_nodes=2,
+            cloud_compute=L.CloudCompute(
+                name="gpu-fast-multi",
+                disk_size=50,
+            ),
+            tb_drive=tb_drive,
         ),
-        tb_drive=tb_drive
     )
 )
+
 
