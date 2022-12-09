@@ -73,10 +73,12 @@ class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
 
 class TensorBoardWork(L.app.LightningWork):
     def __init__(self, *args, drive: Drive, **kwargs):
+        build_cfg = L.BuildConfig(requirements=["tensorboard"])
         super().__init__(
             *args,
             parallel=True,
-            cloud_build_config=L.BuildConfig(requirements=["tensorboard"]),
+            cloud_build_config=build_cfg,
+            local_build_config=build_cfg,
             **kwargs,
         )
 
