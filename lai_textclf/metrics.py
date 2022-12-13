@@ -1,10 +1,6 @@
-from torchmetrics.classification import (
-    MulticlassAccuracy,
-    MulticlassPrecision,
-    MulticlassRecall,
-    MulticlassF1Score,
-)
 from torchmetrics import MetricCollection
+from torchmetrics.classification import (MulticlassAccuracy, MulticlassF1Score,
+                                         MulticlassPrecision, MulticlassRecall)
 
 
 def get_default_clf_metrics(num_classes: int):
