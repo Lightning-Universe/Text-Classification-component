@@ -40,7 +40,6 @@ To run paste the following code snippet in a file `app.py`:
 
 
 ```python
-
 #! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 #! mkdir -p ${HOME}/data/yelpreviewfull
 #! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
@@ -50,20 +49,13 @@ import os
 from copy import deepcopy
 
 import lightning as L
-from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import (
-    default_callbacks,
-    TextClassificationDataLoader,
-    TextDataset,
-    DriveTensorBoardLogger,
-    get_default_clf_metrics,
-    warn_if_drive_not_empty,
-    warn_if_local,
-    TensorBoardWork
-)
+from lai_textclf import (DriveTensorBoardLogger, Main,
+                         TextClassificationDataLoader, TextDataset,
+                         default_callbacks, get_default_clf_metrics,
+                         warn_if_drive_not_empty, warn_if_local)
 
 
 class TextClassification(L.LightningModule):
@@ -152,30 +144,9 @@ class MyTextClassification(L.LightningWork):
         trainer.fit(pl_module, train_dataloader, val_dataloader)
 
 
-class Main(L.LightningFlow):
-    def __init__(self):
-        super().__init__()
-        tb_drive = Drive("lit://tb_drive")
-        self.tensorboard_work = TensorBoardWork(drive=tb_drive)
-        self.text_classificaion = L.app.components.LightningTrainerMultiNode(
-            MyTextClassification,
-            num_nodes=2,
-            cloud_compute=L.CloudCompute(
-                name="gpu-fast-multi",
-                disk_size=50,
-            ),
-            tb_drive=tb_drive,
-        )
-
-    def run(self, *args, **kwargs) -> None:
-        self.tensorboard_work.run()
-        self.text_classificaion.run()
-
-    def configure_layout(self):
-        return [{"name": "Training Logs", "content": self.tensorboard_work.url}]
-
-
-app = L.LightningApp(Main())
+app = L.LightningApp(
+    Main(MyTextClassification, 2, L.CloudCompute("gpu-fast-multi", disk_size=50))
+)
 
 ```
 
