@@ -10,7 +10,7 @@ import lightning as L
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import (DriveTensorBoardLogger, Main,
+from lai_textclf import (DriveTensorBoardLogger, MultiNodeLightningTrainerWithTensorboard,
                          TextClassificationDataLoader, TextDataset,
                          default_callbacks, get_default_clf_metrics,
                          warn_if_drive_not_empty, warn_if_local)
@@ -103,5 +103,5 @@ class MyTextClassification(L.LightningWork):
 
 
 app = L.LightningApp(
-    Main(MyTextClassification, 2, L.CloudCompute("gpu-fast-multi", disk_size=50))
+    MultiNodeLightningTrainerWithTensorboard(MyTextClassification, 2, L.CloudCompute("gpu-fast-multi", disk_size=50))
 )

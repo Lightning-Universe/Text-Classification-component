@@ -5,7 +5,7 @@ import lightning as L
 from lai_textclf.tensorboard import TensorBoardWork
 
 
-class Main(L.LightningFlow):
+class MultiNodeLightningTrainerWithTensorboard(L.LightningFlow):
     def __init__(
         self,
         work_cls: Type[L.LightningWork],

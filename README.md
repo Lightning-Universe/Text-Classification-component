@@ -38,12 +38,11 @@ All handled easily with the [Lightning Apps framework](https://lightning.ai/ligh
 
 To run paste the following code snippet in a file `app.py`:
 
-
 ```python
 #! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
-#! mkdir -p ${HOME}/data/yelpreviewfull
-#! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
-#! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
+# ! mkdir -p ${HOME}/data/yelpreviewfull
+# ! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
+# ! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/test.csv -o ${HOME}/data/yelpreviewfull/test.csv
 
 import os
 from copy import deepcopy
@@ -52,7 +51,7 @@ import lightning as L
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
-from lai_textclf import (DriveTensorBoardLogger, Main,
+from lai_textclf import (DriveTensorBoardLogger, MultiNodeLightningTrainerWithTensorboard,
                          TextClassificationDataLoader, TextDataset,
                          default_callbacks, get_default_clf_metrics,
                          warn_if_drive_not_empty, warn_if_local)
@@ -145,7 +144,7 @@ class MyTextClassification(L.LightningWork):
 
 
 app = L.LightningApp(
-    Main(MyTextClassification, 2, L.CloudCompute("gpu-fast-multi", disk_size=50))
+    MultiNodeLightningTrainerWithTensorboard(MyTextClassification, 2, L.CloudCompute("gpu-fast-multi", disk_size=50))
 )
 
 ```
