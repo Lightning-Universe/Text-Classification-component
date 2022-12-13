@@ -39,6 +39,7 @@ All handled easily with the [Lightning Apps framework](https://lightning.ai/ligh
 To run paste the following code snippet in a file `app.py`:
 
 ```python
+
 #! pip install git+https://github.com/Lightning-AI/LAI-Text-Classification-Component
 # ! mkdir -p ${HOME}/data/yelpreviewfull
 # ! curl https://s3.amazonaws.com/pl-flash-data/lai-llm/lai-text-classification/datasets/Yelp/datasets/YelpReviewFull/yelp_review_full_csv/train.csv -o ${HOME}/data/yelpreviewfull/train.csv
@@ -48,6 +49,7 @@ import os
 from copy import deepcopy
 
 import lightning as L
+from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
