@@ -1,21 +1,18 @@
+import concurrent.futures
 import os
 import sys
+from pathlib import Path
 from subprocess import Popen
+from time import time
+from typing import Optional
 from uuid import uuid4
 
 import lightning as L
-import concurrent.futures
-import os
-from pathlib import Path
-from time import time
-from typing import Optional
-
-
 from fsspec.implementations.local import LocalFileSystem
 from lightning.app.storage import Drive
 from lightning.app.storage.path import _filesystem
-from lightning.pytorch.utilities.rank_zero import rank_zero_only
 from lightning.app.utilities.cloud import is_running_in_cloud
+from lightning.pytorch.utilities.rank_zero import rank_zero_only
 
 
 class DriveTensorBoardLogger(L.pytorch.loggers.TensorBoardLogger):
