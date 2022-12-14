@@ -7,7 +7,6 @@ import os
 from copy import deepcopy
 
 import lightning as L
-from lightning.app.storage import Drive
 from torch.optim import AdamW
 from transformers import BloomForSequenceClassification, BloomTokenizerFast
 
