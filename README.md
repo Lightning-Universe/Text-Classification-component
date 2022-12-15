@@ -167,7 +167,7 @@ This example is optimized for the cloud. To run it locally on your laptop, choos
 class MyTextClassification(L.LightningWork):
     def run(self):
         ...
-        trainer = L.Trainer(accelerator="ddp")
+        trainer = L.Trainer(strategy="ddp")
         ...
 ```
 Then run the app with 
