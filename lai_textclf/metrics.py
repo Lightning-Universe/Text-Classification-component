@@ -12,7 +12,4 @@ def clf_metrics(num_classes: int):
     )
 
 def get_default_clf_metrics(num_classes: int):
-    return MetricCollection(
-        MulticlassPrecision(num_classes),
-        MulticlassRecall(num_classes),
-    )
+    return clf_metrics(num_classes)
