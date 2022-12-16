@@ -10,3 +10,9 @@ def clf_metrics(num_classes: int):
         MulticlassF1Score(num_classes),
         MulticlassAccuracy(num_classes),
     )
+
+def get_default_clf_metrics(num_classes: int):
+    return MetricCollection(
+        MulticlassPrecision(num_classes),
+        MulticlassRecall(num_classes),
+    )
